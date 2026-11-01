@@ -1,12 +1,12 @@
 {
   "domain": "cde_lightband",
   "name": "CDE Lightband",
-  "codeowners": ["@user"],
+  "codeowners": ["@ahardy11397"],
   "config_flow": true,
-  "documentation": "https://cdelightband.com",
+  "documentation": "https://github.com/ahardy11397/ha-cde-lightband",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://cdelightband.com",
+  "issue_tracker": "https://github.com/ahardy11397/ha-cde-lightband/issues",
   "requirements": [],
   "version": "1.0.0"
 }

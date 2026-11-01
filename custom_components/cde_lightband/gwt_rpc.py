@@ -18,6 +18,11 @@ GWT_STRING_TYPE = "java.lang.String/2004016611"
 GWT_JSON_DATA_TYPE = "com.daffron.shared.shared.JsonData/1630149208"
 
 
+def escape_gwt_string(s: str) -> str:
+    """Escape backslash and pipe delimiter for GWT string table."""
+    return s.replace("\\", "\\\\").replace("|", "\\!")
+
+
 def build_gwt_payload(
     service: str,
     method: str,
@@ -45,7 +50,7 @@ def build_gwt_payload(
     for pv in param_values:
         payload_indices.append(get_str_idx(pv))
 
-    str_table = "|".join(strings)
+    str_table = "|".join(escape_gwt_string(s) for s in strings)
     param_count = len(param_types)
     header = f"7|0|{len(strings)}|{str_table}|"
     indices_str = "|".join(str(i) for i in payload_indices)
@@ -78,7 +83,7 @@ def build_gwt_json_data_payload(
         data_json,
         options_json,
     ]
-    str_table = "|".join(strings)
+    str_table = "|".join(escape_gwt_string(s) for s in strings)
     header = f"7|0|{len(strings)}|{str_table}|"
     # Body: mb(1) | pol(2) | svc(3) | mth(4) | 1 param | param_type(5) | object_type(5) | field_a(0) | field_b(6) | field_c(7)
     body = "1|2|3|4|1|5|5|0|6|7|"

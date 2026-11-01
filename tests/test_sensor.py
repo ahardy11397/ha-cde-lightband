@@ -56,7 +56,7 @@ async def test_sensors_created_and_updated(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         # 1. Balance Due Sensor
-        balance_state = hass.states.get("sensor.cde_balance_due")
+        balance_state = hass.states.get("sensor.cde_lightband_12345678_balance_due")
         assert balance_state is not None
         assert float(balance_state.state) == 155.75
         assert balance_state.attributes["unit_of_measurement"] == "USD"
@@ -65,25 +65,26 @@ async def test_sensors_created_and_updated(hass: HomeAssistant):
         assert balance_state.attributes["service_address"] == "456 Power Lane, Clarksville, TN"
 
         # 2. Payment Due Date Sensor
-        due_state = hass.states.get("sensor.cde_payment_due_date")
+        due_state = hass.states.get("sensor.cde_lightband_12345678_payment_due_date")
         assert due_state is not None
         assert due_state.state == "2026-11-20"
         assert due_state.attributes["device_class"] == SensorDeviceClass.DATE
+        assert "days_until_due" in due_state.attributes
 
         # 3. Last Payment Sensor
-        payment_state = hass.states.get("sensor.cde_last_payment_amount")
+        payment_state = hass.states.get("sensor.cde_lightband_12345678_last_payment_amount")
         assert payment_state is not None
         assert float(payment_state.state) == 140.00
         assert payment_state.attributes["last_payment_date"] == "2026-10-18"
 
         # 4. Last Bill Sensor
-        bill_state = hass.states.get("sensor.cde_last_bill_amount")
+        bill_state = hass.states.get("sensor.cde_lightband_12345678_last_bill_amount")
         assert bill_state is not None
         assert float(bill_state.state) == 155.75
         assert bill_state.attributes["last_bill_date"] == "2026-10-28"
 
         # 5. Daily Energy Consumption Sensor
-        energy_state = hass.states.get("sensor.cde_daily_energy_consumption")
+        energy_state = hass.states.get("sensor.cde_lightband_12345678_daily_energy_consumption")
         assert energy_state is not None
         assert float(energy_state.state) == 42.8
         assert energy_state.attributes["unit_of_measurement"] == "kWh"

@@ -70,3 +70,46 @@ async def test_coordinator_update_failure_raises_update_failed(hass: HomeAssista
         coordinator = CdeDataUpdateCoordinator(hass, entry)
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()
+
+
+@pytest.mark.asyncio
+async def test_sync_statistics_incremental_ingestion(hass: HomeAssistant):
+    """Test incremental external statistics sync avoids duplicate compounding."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = CdeDataUpdateCoordinator(hass, entry)
+    coordinator._account_number = "123456"
+
+    records = [
+        CdeUsageRecord(timestamp="2026-10-31T00:00:00+00:00", kwh=10.0, meter_id="M123"),
+        CdeUsageRecord(timestamp="2026-11-01T00:00:00+00:00", kwh=15.0, meter_id="M123"),
+    ]
+
+    # Mock recorder already having Oct 31 with sum=50.0
+    last_dt_ts = datetime(2026, 10, 31, 0, 0, tzinfo=timezone.utc).timestamp()
+    mock_last_stats = {
+        "cde_lightband:electric_consumption_123456": [
+            {"start": last_dt_ts, "sum": 50.0}
+        ]
+    }
+
+    with patch(
+        "custom_components.cde_lightband.coordinator.get_last_statistics",
+        return_value=mock_last_stats,
+    ), patch(
+        "custom_components.cde_lightband.coordinator.async_add_external_statistics"
+    ) as mock_add_stats:
+        await coordinator._async_sync_statistics(records)
+        mock_add_stats.assert_called_once()
+        _, args, _ = mock_add_stats.mock_calls[0]
+        metadata, stat_list = args[1], args[2]
+
+        # Only 2026-11-01 should be ingested (Oct 31 skipped)
+        assert len(stat_list) == 1
+        assert stat_list[0]["state"] == 15.0
+        assert stat_list[0]["sum"] == 65.0  # 50.0 + 15.0

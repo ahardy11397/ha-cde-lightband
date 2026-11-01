@@ -127,14 +127,21 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         statistics: list[StatisticData] = []
         running_sum = 0.0
+        last_dt: datetime | None = None
 
-        # Query existing last statistic to continue running sum
+        # Query existing last statistic to continue running sum and avoid duplicate ingestion
         try:
-            last_stats = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, stat_id, True, set()
+            last_stats = await self.hass.async_add_executor_job(
+                get_last_statistics, self.hass, 1, stat_id, True, {"start", "sum"}
             )
             if last_stats and stat_id in last_stats and last_stats[stat_id]:
-                running_sum = last_stats[stat_id][0].get("sum") or 0.0
+                last_stat = last_stats[stat_id][0]
+                running_sum = last_stat.get("sum") or 0.0
+                last_start = last_stat.get("start")
+                if isinstance(last_start, (int, float)):
+                    last_dt = datetime.fromtimestamp(last_start, tz=timezone.utc)
+                elif isinstance(last_start, datetime):
+                    last_dt = last_start if last_start.tzinfo else last_start.replace(tzinfo=timezone.utc)
         except Exception as err:
             _LOGGER.debug("Could not retrieve last statistics for %s: %s", stat_id, err)
 
@@ -146,8 +153,14 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     dt = datetime.fromisoformat(record.timestamp.replace("Z", "+00:00"))
                 elif "T" in record.timestamp:
                     dt = datetime.fromisoformat(record.timestamp)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
                 else:
                     dt = datetime.now(timezone.utc)
+
+                # Skip records that are already ingested or older than the last recorded statistic
+                if last_dt and dt <= last_dt:
+                    continue
 
                 running_sum += record.kwh
                 statistics.append(

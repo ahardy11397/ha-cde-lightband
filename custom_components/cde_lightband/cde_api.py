@@ -329,7 +329,14 @@ class CdeApiClient:
         last_payment_date = pay_data.get("DATE")
         last_payment_amount = float(pay_data.get("AMOUNT", 0.0))
 
-        is_past_due = self._total_due > 0
+        # Check if past due: positive balance and current date strictly past due date
+        is_past_due = False
+        if self._total_due > 0 and due_date:
+            try:
+                due_d = datetime.strptime(due_date, "%Y-%m-%d").date()
+                is_past_due = datetime.now(timezone.utc).date() > due_d
+            except ValueError:
+                pass
         past_due_amount = self._total_due if is_past_due else 0.0
 
         return CdeBillingData(

@@ -53,7 +53,7 @@ async def async_setup_entry(
 class CdeBaseSensor(CoordinatorEntity[CdeDataUpdateCoordinator], SensorEntity):
     """Base sensor for CDE Lightband."""
 
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
     _attr_attribution = "Data provided by CDE Lightband"
 
     def __init__(
@@ -84,7 +84,7 @@ class CdeBalanceDueSensor(CdeBaseSensor):
     _attr_icon = "mdi:cash-multiple"
 
     def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
-        super().__init__(coordinator, "balance_due", "CDE Balance Due")
+        super().__init__(coordinator, "balance_due", "Balance due")
 
     @property
     def native_value(self) -> float | None:
@@ -112,7 +112,7 @@ class CdePaymentDueDateSensor(CdeBaseSensor):
     _attr_icon = "mdi:calendar-clock"
 
     def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
-        super().__init__(coordinator, "payment_due_date", "CDE Payment Due Date")
+        super().__init__(coordinator, "payment_due_date", "Payment due date")
 
     @property
     def native_value(self) -> date | None:
@@ -127,6 +127,22 @@ class CdePaymentDueDateSensor(CdeBaseSensor):
                     pass
         return None
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.billing_data
+        if not data or not data.due_date:
+            return {}
+        attrs: dict[str, Any] = {}
+        try:
+            if isinstance(data.due_date, date):
+                due_d = data.due_date
+            else:
+                due_d = datetime.strptime(data.due_date, "%Y-%m-%d").date()
+            attrs["days_until_due"] = (due_d - date.today()).days
+        except ValueError:
+            pass
+        return attrs
+
 
 class CdeLastPaymentSensor(CdeBaseSensor):
     """Sensor for most recent payment amount."""
@@ -136,7 +152,7 @@ class CdeLastPaymentSensor(CdeBaseSensor):
     _attr_icon = "mdi:cash-check"
 
     def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
-        super().__init__(coordinator, "last_payment_amount", "CDE Last Payment Amount")
+        super().__init__(coordinator, "last_payment_amount", "Last payment amount")
 
     @property
     def native_value(self) -> float | None:
@@ -160,7 +176,7 @@ class CdeLastBillSensor(CdeBaseSensor):
     _attr_icon = "mdi:file-document-outline"
 
     def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
-        super().__init__(coordinator, "last_bill_amount", "CDE Last Bill Amount")
+        super().__init__(coordinator, "last_bill_amount", "Last bill amount")
 
     @property
     def native_value(self) -> float | None:
@@ -180,12 +196,11 @@ class CdeDailyEnergySensor(CdeBaseSensor):
     """Sensor for daily energy consumption (kWh)."""
 
     _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_icon = "mdi:lightning-bolt"
 
     def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
-        super().__init__(coordinator, "daily_energy_consumption", "CDE Daily Energy Consumption")
+        super().__init__(coordinator, "daily_energy_consumption", "Daily energy consumption")
 
     @property
     def native_value(self) -> float | None:
