@@ -1,0 +1,203 @@
+"""Sensor platform for CDE Lightband integration."""
+from __future__ import annotations
+
+from typing import Any
+from datetime import datetime, date
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfEnergy
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    DOMAIN,
+    ATTR_ACCOUNT_NUMBER,
+    ATTR_SERVICE_ADDRESS,
+    ATTR_IS_PAST_DUE,
+    ATTR_PAST_DUE_AMOUNT,
+    ATTR_LAST_PAYMENT_DATE,
+    ATTR_LAST_BILL_DATE,
+    ATTR_METER_ID,
+    ATTR_READING_DATE,
+)
+from .coordinator import CdeDataUpdateCoordinator
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up CDE Lightband sensor entities based on a config entry."""
+    coordinator: CdeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    entities: list[SensorEntity] = [
+        CdeBalanceDueSensor(coordinator),
+        CdePaymentDueDateSensor(coordinator),
+        CdeLastPaymentSensor(coordinator),
+        CdeLastBillSensor(coordinator),
+        CdeDailyEnergySensor(coordinator),
+    ]
+
+    async_add_entities(entities)
+
+
+class CdeBaseSensor(CoordinatorEntity[CdeDataUpdateCoordinator], SensorEntity):
+    """Base sensor for CDE Lightband."""
+
+    _attr_has_entity_name = False
+    _attr_attribution = "Data provided by CDE Lightband"
+
+    def __init__(
+        self,
+        coordinator: CdeDataUpdateCoordinator,
+        key: str,
+        name: str,
+    ) -> None:
+        """Initialize the base sensor."""
+        super().__init__(coordinator)
+        self._key = key
+        self._attr_name = name
+        self._attr_unique_id = f"{coordinator.account_number}_{key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.account_number)},
+            name=f"CDE Lightband ({coordinator.account_number})",
+            manufacturer="CDE Lightband",
+            model="Power & Broadband",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+
+class CdeBalanceDueSensor(CdeBaseSensor):
+    """Sensor for current balance due."""
+
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_native_unit_of_measurement = "USD"
+    _attr_icon = "mdi:cash-multiple"
+
+    def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
+        super().__init__(coordinator, "balance_due", "CDE Balance Due")
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.billing_data:
+            return self.coordinator.billing_data.balance_due
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.billing_data
+        if not data:
+            return {}
+        return {
+            ATTR_ACCOUNT_NUMBER: data.account_number,
+            ATTR_SERVICE_ADDRESS: data.service_address,
+            ATTR_IS_PAST_DUE: data.is_past_due,
+            ATTR_PAST_DUE_AMOUNT: data.past_due_amount,
+        }
+
+
+class CdePaymentDueDateSensor(CdeBaseSensor):
+    """Sensor for payment due date."""
+
+    _attr_device_class = SensorDeviceClass.DATE
+    _attr_icon = "mdi:calendar-clock"
+
+    def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
+        super().__init__(coordinator, "payment_due_date", "CDE Payment Due Date")
+
+    @property
+    def native_value(self) -> date | str | None:
+        if self.coordinator.billing_data and self.coordinator.billing_data.due_date:
+            due_str = self.coordinator.billing_data.due_date
+            try:
+                return datetime.strptime(due_str, "%Y-%m-%d").date()
+            except ValueError:
+                return due_str
+        return None
+
+
+class CdeLastPaymentSensor(CdeBaseSensor):
+    """Sensor for most recent payment amount."""
+
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_native_unit_of_measurement = "USD"
+    _attr_icon = "mdi:cash-check"
+
+    def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
+        super().__init__(coordinator, "last_payment_amount", "CDE Last Payment Amount")
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.billing_data:
+            return self.coordinator.billing_data.last_payment_amount
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.billing_data
+        if not data or not data.last_payment_date:
+            return {}
+        return {ATTR_LAST_PAYMENT_DATE: data.last_payment_date}
+
+
+class CdeLastBillSensor(CdeBaseSensor):
+    """Sensor for latest generated bill total."""
+
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_native_unit_of_measurement = "USD"
+    _attr_icon = "mdi:file-document-outline"
+
+    def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
+        super().__init__(coordinator, "last_bill_amount", "CDE Last Bill Amount")
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.billing_data:
+            return self.coordinator.billing_data.last_bill_amount
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.billing_data
+        if not data or not data.last_bill_date:
+            return {}
+        return {ATTR_LAST_BILL_DATE: data.last_bill_date}
+
+
+class CdeDailyEnergySensor(CdeBaseSensor):
+    """Sensor for daily energy consumption (kWh)."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_icon = "mdi:lightning-bolt"
+
+    def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
+        super().__init__(coordinator, "daily_energy_consumption", "CDE Daily Energy Consumption")
+
+    @property
+    def native_value(self) -> float | None:
+        records = self.coordinator.usage_records
+        if records:
+            return records[-1].kwh
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        records = self.coordinator.usage_records
+        if not records:
+            return {}
+        latest = records[-1]
+        return {
+            ATTR_METER_ID: latest.meter_id,
+            ATTR_READING_DATE: latest.reading_date or latest.timestamp,
+        }
