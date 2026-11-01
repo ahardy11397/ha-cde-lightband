@@ -26,7 +26,7 @@ def build_gwt_payload(
     module_base: str = CDE_MODULE_BASE,
     policy: str = CDE_POLICY_ID,
 ) -> str:
-    """Build a GWT RPC version 7 payload string."""
+    """Build a GWT RPC version 7 payload string for simple string parameters."""
     strings: list[str] = []
 
     def get_str_idx(s: str) -> int:
@@ -40,10 +40,8 @@ def build_gwt_payload(
     mth_idx = get_str_idx(method)
 
     payload_indices: list[int] = []
-    # 1. Parameter type descriptors
     for pt in param_types:
         payload_indices.append(get_str_idx(pt))
-    # 2. Parameter values
     for pv in param_values:
         payload_indices.append(get_str_idx(pv))
 
@@ -59,6 +57,34 @@ def build_gwt_payload(
     return header + body
 
 
+def build_gwt_json_data_payload(
+    service_method: str,
+    action: str,
+    token: str,
+    data_dict: dict[str, Any] | None = None,
+    module_base: str = CDE_MODULE_BASE,
+    policy: str = CDE_POLICY_ID,
+) -> str:
+    """Build GWT-RPC payload specifically for getJsonData(JsonData)."""
+    options_json = json.dumps({"token": token, "method": service_method, "action": action})
+    data_json = json.dumps(data_dict) if data_dict else ""
+
+    strings = [
+        module_base,
+        policy,
+        CDE_SERVICE_INTERFACE,
+        "getJsonData",
+        GWT_JSON_DATA_TYPE,
+        data_json,
+        options_json,
+    ]
+    str_table = "|".join(strings)
+    header = f"7|0|{len(strings)}|{str_table}|"
+    # Body: mb(1) | pol(2) | svc(3) | mth(4) | 1 param | param_type(5) | object_type(5) | field_a(0) | field_b(6) | field_c(7)
+    body = "1|2|3|4|1|5|5|0|6|7|"
+    return header + body
+
+
 def parse_gwt_response(raw_text: str) -> dict[str, Any]:
     """Parse GWT-RPC response string (e.g. //OK[...] or //EX[...])."""
     text = raw_text.strip()
@@ -66,7 +92,6 @@ def parse_gwt_response(raw_text: str) -> dict[str, Any]:
         json_part = text[4:]
         try:
             parsed = json.loads(json_part)
-            # Typical GWT RPC format: [flags, ..., [string_table], ...]
             string_table = []
             for item in parsed:
                 if isinstance(item, list) and all(isinstance(x, str) for x in item):

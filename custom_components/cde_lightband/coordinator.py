@@ -66,6 +66,8 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @property
     def account_number(self) -> str:
+        if self.client and self.client.account_number:
+            return self.client.account_number
         return self._account_number
 
     @property
@@ -115,6 +117,7 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         metadata = StatisticMetaData(
             has_mean=False,
             has_sum=True,
+            mean_type=StatisticMeanType.NONE,
             name=f"CDE Lightband Electric Usage ({self._account_number})",
             source=DOMAIN,
             statistic_id=stat_id,

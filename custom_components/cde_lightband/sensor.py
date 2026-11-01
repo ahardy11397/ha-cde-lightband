@@ -115,13 +115,16 @@ class CdePaymentDueDateSensor(CdeBaseSensor):
         super().__init__(coordinator, "payment_due_date", "CDE Payment Due Date")
 
     @property
-    def native_value(self) -> date | str | None:
+    def native_value(self) -> date | None:
         if self.coordinator.billing_data and self.coordinator.billing_data.due_date:
-            due_str = self.coordinator.billing_data.due_date
-            try:
-                return datetime.strptime(due_str, "%Y-%m-%d").date()
-            except ValueError:
-                return due_str
+            due_val = self.coordinator.billing_data.due_date
+            if isinstance(due_val, date):
+                return due_val
+            for fmt in ("%Y-%m-%d", "%b %d, %Y", "%B %d, %Y"):
+                try:
+                    return datetime.strptime(due_val.strip(), fmt).date()
+                except ValueError:
+                    pass
         return None
 
 
