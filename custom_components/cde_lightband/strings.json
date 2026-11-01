@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to CDE Lightband",
+        "description": "Enter your CDE Lightband online portal credentials (myaccount.clarksvillede.com).",
+        "data": {
+          "username": "Username / Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to CDE Lightband portal",
+      "invalid_auth": "Invalid username or password",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This CDE Lightband account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "CDE Lightband Options",
+        "data": {
+          "scan_interval": "Update Interval (minutes)",
+          "history_days": "Historical usage days to sync"
+        }
+      }
+    }
+  }
+}
