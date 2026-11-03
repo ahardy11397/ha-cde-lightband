@@ -7,6 +7,7 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/ahardy11397/ha-cde-lightband/issues",
+  "categories": ["energy"],
   "requirements": [],
   "version": "1.0.0"
 }
