@@ -1,14 +1,14 @@
 {
   "domain": "cde_lightband",
   "name": "CDE Lightband",
+  "after_dependencies": ["recorder"],
+  "categories": ["energy"],
   "codeowners": ["@ahardy11397"],
   "config_flow": true,
   "documentation": "https://github.com/ahardy11397/ha-cde-lightband",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/ahardy11397/ha-cde-lightband/issues",
-  "categories": ["energy"],
-  "after_dependencies": ["recorder"],
   "requirements": [],
   "version": "1.0.0"
 }
