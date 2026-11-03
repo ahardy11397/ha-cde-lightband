@@ -1,0 +1,36 @@
+name: Validate
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: HACS Action Validation
+        uses: "hacs/action/validate@main"
+        with:
+          category: "integration"
+
+      - name: Hassfest Validation
+        uses: "home-assistant/actions/hassfest@master"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp homeassistant pytest pytest-homeassistant-custom-component
+
+      - name: Run unit tests
+        run: |
+          pytest
