@@ -8,6 +8,7 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/ahardy11397/ha-cde-lightband/issues",
   "categories": ["energy"],
+  "after_dependencies": ["recorder"],
   "requirements": [],
   "version": "1.0.0"
 }
