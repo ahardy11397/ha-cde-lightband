@@ -1,12 +1,16 @@
 """Unit tests for CdeApiClient."""
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from custom_components.cde_lightband.cde_api import CdeApiClient, CdeBillingData, CdeUsageRecord
 from custom_components.cde_lightband.exceptions import CdeAuthError, CdeConnectionError, CdeDataError
 
+def _mock_session() -> MagicMock:
+    """Stub aiohttp session; network calls are mocked per-test."""
+    return MagicMock()
+
 @pytest.mark.asyncio
 async def test_auth_failure_raises_cde_auth_error():
-    client = CdeApiClient(username="baduser", password="badpassword")
+    client = CdeApiClient(username="baduser", password="badpassword", session=_mock_session())
     with patch.object(client, "_post_rpc", new_callable=AsyncMock) as mock_post:
         # Mock initialData ok, then signIn failure
         mock_post.side_effect = [
@@ -19,7 +23,7 @@ async def test_auth_failure_raises_cde_auth_error():
 
 @pytest.mark.asyncio
 async def test_auth_success():
-    client = CdeApiClient(username="gooduser", password="goodpassword")
+    client = CdeApiClient(username="gooduser", password="goodpassword", session=_mock_session())
     with patch.object(client, "_post_rpc", new_callable=AsyncMock) as mock_post, \
          patch.object(client, "_post_json_service", new_callable=AsyncMock) as mock_json:
         mock_post.side_effect = [
@@ -46,7 +50,7 @@ async def test_auth_success():
 
 @pytest.mark.asyncio
 async def test_fetch_billing_data_parses_fields():
-    client = CdeApiClient(username="user", password="pass")
+    client = CdeApiClient(username="user", password="pass", session=_mock_session())
     client._is_authenticated = True
     client._token = "9876543210"
     client._account_number = "1234567"
@@ -87,7 +91,7 @@ async def test_fetch_billing_data_parses_fields():
 
 @pytest.mark.asyncio
 async def test_fetch_usage_data_parses_records():
-    client = CdeApiClient(username="user", password="pass")
+    client = CdeApiClient(username="user", password="pass", session=_mock_session())
     client._is_authenticated = True
     client._token = "9876543210"
     client._account_number = "1234567"
@@ -123,8 +127,9 @@ async def test_fetch_usage_data_parses_records():
 
 @pytest.mark.asyncio
 async def test_connection_error_on_network_failure():
-    client = CdeApiClient(username="user", password="pass")
-    with patch("aiohttp.ClientSession.post", side_effect=Exception("Connection refused")):
-        with pytest.raises(CdeConnectionError):
-            await client.authenticate()
+    session = _mock_session()
+    session.post = MagicMock(side_effect=Exception("Connection refused"))
+    client = CdeApiClient(username="user", password="pass", session=session)
+    with pytest.raises(CdeConnectionError):
+        await client.authenticate()
     await client.close()
