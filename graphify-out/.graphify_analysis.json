@@ -1,0 +1,453 @@
+{
+  "communities": {
+    "0": [
+      "clientsession",
+      "custom_components_cde_lightband_cde_api_cdeapiclient",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_account_number",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_authenticate",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_close",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_fetch_billing_data",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_fetch_usage_data",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_init",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_is_authenticated",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_meter_id",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_post_gwt",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_post_json_service",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_post_json_service_do_post",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_post_rpc",
+      "custom_components_cde_lightband_cde_api_cdeapiclient_service_address",
+      "custom_components_cde_lightband_cde_api_cdebillingdata",
+      "custom_components_cde_lightband_cde_api_parse_date",
+      "custom_components_cde_lightband_cde_api_py_any",
+      "custom_components_cde_lightband_cde_api_rationale_120",
+      "custom_components_cde_lightband_cde_api_rationale_123",
+      "custom_components_cde_lightband_cde_api_rationale_153",
+      "custom_components_cde_lightband_cde_api_rationale_163",
+      "custom_components_cde_lightband_cde_api_rationale_240",
+      "custom_components_cde_lightband_cde_api_rationale_276",
+      "custom_components_cde_lightband_cde_api_rationale_29",
+      "custom_components_cde_lightband_cde_api_rationale_349",
+      "custom_components_cde_lightband_cde_api_rationale_54",
+      "custom_components_cde_lightband_cde_api_rationale_77",
+      "custom_components_cde_lightband_exceptions",
+      "custom_components_cde_lightband_exceptions_cdeautherror",
+      "custom_components_cde_lightband_exceptions_cdeconnectionerror",
+      "custom_components_cde_lightband_exceptions_cdedataerror",
+      "custom_components_cde_lightband_exceptions_cdeerror",
+      "custom_components_cde_lightband_exceptions_rationale_1",
+      "custom_components_cde_lightband_exceptions_rationale_10",
+      "custom_components_cde_lightband_exceptions_rationale_13",
+      "custom_components_cde_lightband_exceptions_rationale_4",
+      "custom_components_cde_lightband_exceptions_rationale_7",
+      "exception",
+      "tests_test_cde_api",
+      "tests_test_cde_api_py_asyncio",
+      "tests_test_cde_api_rationale_1",
+      "tests_test_cde_api_test_auth_failure_raises_cde_auth_error",
+      "tests_test_cde_api_test_auth_success",
+      "tests_test_cde_api_test_connection_error_on_network_failure",
+      "tests_test_cde_api_test_fetch_billing_data_parses_fields",
+      "tests_test_cde_api_test_fetch_billing_data_parses_fields_mock_post_json",
+      "tests_test_cde_api_test_fetch_usage_data_parses_records",
+      "tests_test_cde_api_test_fetch_usage_data_parses_records_mock_post_json"
+    ],
+    "1": [
+      "addentitiescallback",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator_async_shutdown",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator_billing_data",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator_init",
+      "custom_components_cde_lightband_coordinator_py_configentry",
+      "custom_components_cde_lightband_coordinator_py_homeassistant",
+      "custom_components_cde_lightband_coordinator_rationale_47",
+      "custom_components_cde_lightband_coordinator_rationale_50",
+      "custom_components_cde_lightband_coordinator_rationale_69",
+      "custom_components_cde_lightband_coordinator_rationale_84",
+      "custom_components_cde_lightband_sensor_async_setup_entry",
+      "custom_components_cde_lightband_sensor_cdebalanceduesensor",
+      "custom_components_cde_lightband_sensor_cdebalanceduesensor_extra_state_attributes",
+      "custom_components_cde_lightband_sensor_cdebalanceduesensor_init",
+      "custom_components_cde_lightband_sensor_cdebalanceduesensor_native_value",
+      "custom_components_cde_lightband_sensor_cdebasesensor",
+      "custom_components_cde_lightband_sensor_cdebasesensor_init",
+      "custom_components_cde_lightband_sensor_cdedailyenergysensor",
+      "custom_components_cde_lightband_sensor_cdedailyenergysensor_extra_state_attributes",
+      "custom_components_cde_lightband_sensor_cdedailyenergysensor_init",
+      "custom_components_cde_lightband_sensor_cdedailyenergysensor_native_value",
+      "custom_components_cde_lightband_sensor_cdelastbillsensor",
+      "custom_components_cde_lightband_sensor_cdelastbillsensor_extra_state_attributes",
+      "custom_components_cde_lightband_sensor_cdelastbillsensor_init",
+      "custom_components_cde_lightband_sensor_cdelastbillsensor_native_value",
+      "custom_components_cde_lightband_sensor_cdelastpaymentsensor",
+      "custom_components_cde_lightband_sensor_cdelastpaymentsensor_extra_state_attributes",
+      "custom_components_cde_lightband_sensor_cdelastpaymentsensor_init",
+      "custom_components_cde_lightband_sensor_cdelastpaymentsensor_native_value",
+      "custom_components_cde_lightband_sensor_cdepaymentduedatesensor",
+      "custom_components_cde_lightband_sensor_cdepaymentduedatesensor_extra_state_attributes",
+      "custom_components_cde_lightband_sensor_cdepaymentduedatesensor_init",
+      "custom_components_cde_lightband_sensor_cdepaymentduedatesensor_native_value",
+      "custom_components_cde_lightband_sensor_py_any",
+      "custom_components_cde_lightband_sensor_py_configentry",
+      "custom_components_cde_lightband_sensor_py_homeassistant",
+      "custom_components_cde_lightband_sensor_rationale_109",
+      "custom_components_cde_lightband_sensor_rationale_148",
+      "custom_components_cde_lightband_sensor_rationale_172",
+      "custom_components_cde_lightband_sensor_rationale_196",
+      "custom_components_cde_lightband_sensor_rationale_39",
+      "custom_components_cde_lightband_sensor_rationale_54",
+      "custom_components_cde_lightband_sensor_rationale_65",
+      "custom_components_cde_lightband_sensor_rationale_80",
+      "date",
+      "sensorentity"
+    ],
+    "2": [
+      "aiohttp",
+      "custom_components_cde_lightband_cde_api",
+      "custom_components_cde_lightband_cde_api_parse_timestamp",
+      "custom_components_cde_lightband_cde_api_rationale_1",
+      "custom_components_cde_lightband_cde_api_rationale_41",
+      "custom_components_cde_lightband_config_flow",
+      "custom_components_cde_lightband_config_flow_rationale_1",
+      "custom_components_cde_lightband_const",
+      "custom_components_cde_lightband_const_rationale_1",
+      "custom_components_cde_lightband_coordinator",
+      "custom_components_cde_lightband_coordinator_rationale_1",
+      "custom_components_cde_lightband_init",
+      "custom_components_cde_lightband_init_rationale_1",
+      "custom_components_cde_lightband_sensor",
+      "custom_components_cde_lightband_sensor_rationale_1",
+      "dataclasses",
+      "datetime",
+      "homeassistant",
+      "homeassistant_components_recorder",
+      "homeassistant_components_recorder_models",
+      "homeassistant_components_recorder_statistics",
+      "homeassistant_components_sensor",
+      "homeassistant_config_entries",
+      "homeassistant_const",
+      "homeassistant_core",
+      "homeassistant_data_entry_flow",
+      "homeassistant_helpers_aiohttp_client",
+      "homeassistant_helpers_device_registry",
+      "homeassistant_helpers_entity_platform",
+      "homeassistant_helpers_update_coordinator",
+      "homeassistant_util_unit_conversion",
+      "logging",
+      "tests_test_coordinator",
+      "tests_test_coordinator_rationale_1",
+      "tests_test_sensor",
+      "tests_test_sensor_rationale_1",
+      "typing",
+      "unittest_mock",
+      "voluptuous"
+    ],
+    "3": [
+      "custom_components_cde_lightband_gwt_rpc",
+      "custom_components_cde_lightband_gwt_rpc_build_gwt_json_data_payload",
+      "custom_components_cde_lightband_gwt_rpc_build_gwt_payload",
+      "custom_components_cde_lightband_gwt_rpc_build_gwt_payload_get_str_idx",
+      "custom_components_cde_lightband_gwt_rpc_escape_gwt_string",
+      "custom_components_cde_lightband_gwt_rpc_parse_gwt_response",
+      "custom_components_cde_lightband_gwt_rpc_py_any",
+      "custom_components_cde_lightband_gwt_rpc_rationale_1",
+      "custom_components_cde_lightband_gwt_rpc_rationale_22",
+      "custom_components_cde_lightband_gwt_rpc_rationale_34",
+      "custom_components_cde_lightband_gwt_rpc_rationale_73",
+      "custom_components_cde_lightband_gwt_rpc_rationale_94",
+      "json",
+      "pathlib",
+      "re",
+      "tests_test_gwt_rpc",
+      "tests_test_gwt_rpc_rationale_1",
+      "tests_test_gwt_rpc_test_build_gwt_payload_structure",
+      "tests_test_gwt_rpc_test_build_gwt_payload_zero_params",
+      "tests_test_gwt_rpc_test_parse_gwt_ex_response",
+      "tests_test_gwt_rpc_test_parse_gwt_invalid_response",
+      "tests_test_gwt_rpc_test_parse_gwt_ok_response",
+      "tests_test_manifest",
+      "tests_test_manifest_rationale_1",
+      "tests_test_manifest_test_constants_defined",
+      "tests_test_manifest_test_manifest_schema",
+      "tests_test_manifest_test_translations_valid"
+    ],
+    "4": [
+      "custom_components_cde_lightband_cde_api_cdeusagerecord",
+      "custom_components_cde_lightband_cde_api_rationale_69",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator_account_number",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator_async_sync_statistics",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator_async_update_data",
+      "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator_usage_records",
+      "custom_components_cde_lightband_coordinator_py_any",
+      "custom_components_cde_lightband_coordinator_rationale_121",
+      "custom_components_cde_lightband_coordinator_rationale_91",
+      "custom_components_cde_lightband_coordinator_rationale_97",
+      "tests_test_coordinator_py_asyncio",
+      "tests_test_coordinator_py_homeassistant",
+      "tests_test_coordinator_rationale_17",
+      "tests_test_coordinator_rationale_58",
+      "tests_test_coordinator_rationale_77",
+      "tests_test_coordinator_test_coordinator_update_failure_raises_update_failed",
+      "tests_test_coordinator_test_coordinator_update_success",
+      "tests_test_coordinator_test_sync_statistics_incremental_ingestion",
+      "tests_test_sensor_py_asyncio",
+      "tests_test_sensor_py_homeassistant",
+      "tests_test_sensor_rationale_14",
+      "tests_test_sensor_test_sensors_created_and_updated"
+    ],
+    "5": [
+      "fixture",
+      "pytest",
+      "pytest_homeassistant_custom_component_common",
+      "tests_conftest",
+      "tests_conftest_auto_enable_custom_integrations",
+      "tests_conftest_rationale_1",
+      "tests_test_config_flow",
+      "tests_test_config_flow_py_asyncio",
+      "tests_test_config_flow_py_homeassistant",
+      "tests_test_config_flow_rationale_1",
+      "tests_test_config_flow_rationale_20",
+      "tests_test_config_flow_rationale_31",
+      "tests_test_config_flow_rationale_47",
+      "tests_test_config_flow_rationale_63",
+      "tests_test_config_flow_rationale_91",
+      "tests_test_config_flow_test_cannot_connect_error",
+      "tests_test_config_flow_test_form_displayed",
+      "tests_test_config_flow_test_invalid_auth_error",
+      "tests_test_config_flow_test_options_flow",
+      "tests_test_config_flow_test_successful_config_entry"
+    ],
+    "6": [
+      "github_workflows_validate",
+      "github_workflows_validate_jobs",
+      "github_workflows_validate_jobs_validate",
+      "github_workflows_validate_name",
+      "github_workflows_validate_on",
+      "github_workflows_validate_on_pull_request",
+      "github_workflows_validate_on_push",
+      "github_workflows_validate_pull_request_branches",
+      "github_workflows_validate_push_branches",
+      "github_workflows_validate_steps_name",
+      "github_workflows_validate_steps_run",
+      "github_workflows_validate_steps_uses",
+      "github_workflows_validate_steps_with",
+      "github_workflows_validate_validate_runs_on",
+      "github_workflows_validate_validate_steps",
+      "github_workflows_validate_with_category",
+      "github_workflows_validate_with_python_version"
+    ],
+    "7": [
+      "callback",
+      "custom_components_cde_lightband_config_flow_cdeconfigflow",
+      "custom_components_cde_lightband_config_flow_cdeconfigflow_async_get_options_flow",
+      "custom_components_cde_lightband_config_flow_cdeconfigflow_async_step_user",
+      "custom_components_cde_lightband_config_flow_cdeoptionsflowhandler",
+      "custom_components_cde_lightband_config_flow_cdeoptionsflowhandler_async_step_init",
+      "custom_components_cde_lightband_config_flow_py_any",
+      "custom_components_cde_lightband_config_flow_py_configentry",
+      "custom_components_cde_lightband_config_flow_rationale_36",
+      "custom_components_cde_lightband_config_flow_rationale_43",
+      "custom_components_cde_lightband_config_flow_rationale_92",
+      "custom_components_cde_lightband_config_flow_rationale_97",
+      "flowresult",
+      "optionsflow"
+    ],
+    "8": [
+      "custom_components_cde_lightband_manifest",
+      "custom_components_cde_lightband_manifest_after_dependencies",
+      "custom_components_cde_lightband_manifest_categories",
+      "custom_components_cde_lightband_manifest_codeowners",
+      "custom_components_cde_lightband_manifest_config_flow",
+      "custom_components_cde_lightband_manifest_documentation",
+      "custom_components_cde_lightband_manifest_domain",
+      "custom_components_cde_lightband_manifest_integration_type",
+      "custom_components_cde_lightband_manifest_iot_class",
+      "custom_components_cde_lightband_manifest_issue_tracker",
+      "custom_components_cde_lightband_manifest_name",
+      "custom_components_cde_lightband_manifest_requirements",
+      "custom_components_cde_lightband_manifest_version"
+    ],
+    "9": [
+      "custom_components_cde_lightband_init_async_setup_entry",
+      "custom_components_cde_lightband_init_async_unload_entry",
+      "custom_components_cde_lightband_init_py_configentry",
+      "custom_components_cde_lightband_init_py_homeassistant",
+      "custom_components_cde_lightband_init_rationale_18",
+      "custom_components_cde_lightband_init_rationale_31",
+      "custom_components_cde_lightband_init_rationale_40",
+      "custom_components_cde_lightband_init_update_listener"
+    ],
+    "10": [
+      "tests_test_scaffolding",
+      "tests_test_scaffolding_rationale_1",
+      "tests_test_scaffolding_test_environment_loads"
+    ],
+    "11": [
+      "custom_components_init",
+      "custom_components_init_rationale_1"
+    ],
+    "12": [
+      "pkg_ha_cde_lightband"
+    ]
+  },
+  "cohesion": {
+    "0": 0.08418367346938775,
+    "1": 0.06567992599444958,
+    "2": 0.09176788124156546,
+    "3": 0.11396011396011396,
+    "4": 0.11688311688311688,
+    "5": 0.14736842105263157,
+    "6": 0.11764705882352941,
+    "7": 0.16483516483516483,
+    "8": 0.15384615384615385,
+    "9": 0.35714285714285715,
+    "10": 0.6666666666666666,
+    "11": 1.0,
+    "12": 1.0
+  },
+  "gods": [
+    {
+      "id": "custom_components_cde_lightband_coordinator_cdedataupdatecoordinator",
+      "label": "CdeDataUpdateCoordinator",
+      "degree": 33
+    },
+    {
+      "id": "custom_components_cde_lightband_cde_api_cdeapiclient",
+      "label": "CdeApiClient",
+      "degree": 29
+    },
+    {
+      "id": "custom_components_cde_lightband_exceptions_cdeconnectionerror",
+      "label": "CdeConnectionError",
+      "degree": 15
+    },
+    {
+      "id": "custom_components_cde_lightband_cde_api_cdeusagerecord",
+      "label": "CdeUsageRecord",
+      "degree": 13
+    },
+    {
+      "id": "custom_components_cde_lightband_cde_api_cdebillingdata",
+      "label": "CdeBillingData",
+      "degree": 12
+    },
+    {
+      "id": "custom_components_cde_lightband_exceptions_cdeautherror",
+      "label": "CdeAuthError",
+      "degree": 12
+    },
+    {
+      "id": "custom_components_cde_lightband_sensor_async_setup_entry",
+      "label": "async_setup_entry()",
+      "degree": 11
+    },
+    {
+      "id": "custom_components_cde_lightband_sensor_cdebasesensor",
+      "label": "CdeBaseSensor",
+      "degree": 10
+    },
+    {
+      "id": "custom_components_cde_lightband_gwt_rpc_parse_gwt_response",
+      "label": "parse_gwt_response()",
+      "degree": 10
+    },
+    {
+      "id": "custom_components_cde_lightband_gwt_rpc_build_gwt_payload",
+      "label": "build_gwt_payload()",
+      "degree": 9
+    }
+  ],
+  "surprises": [
+    {
+      "source": "test_coordinator_update_success()",
+      "target": "CdeBillingData",
+      "source_files": [
+        "tests/test_coordinator.py",
+        "custom_components/cde_lightband/cde_api.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "test_sensors_created_and_updated()",
+      "target": "CdeBillingData",
+      "source_files": [
+        "tests/test_sensor.py",
+        "custom_components/cde_lightband/cde_api.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "test_invalid_auth_error()",
+      "target": "CdeAuthError",
+      "source_files": [
+        "tests/test_config_flow.py",
+        "custom_components/cde_lightband/exceptions.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "test_cannot_connect_error()",
+      "target": "CdeConnectionError",
+      "source_files": [
+        "tests/test_config_flow.py",
+        "custom_components/cde_lightband/exceptions.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "test_coordinator_update_failure_raises_update_failed()",
+      "target": "CdeConnectionError",
+      "source_files": [
+        "tests/test_coordinator.py",
+        "custom_components/cde_lightband/exceptions.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `CdeDataUpdateCoordinator` connect `CdeDataUpdateCoordinator` to `CdeApiClient`, `async_setup_entry`, `cde_api.py`, `CdeUsageRecord`?",
+      "why": "High betweenness centrality (0.238) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 14 inferred relationships involving `CdeDataUpdateCoordinator` (e.g. with `CdeApiClient` and `CdeBillingData`) actually correct?",
+      "why": "`CdeDataUpdateCoordinator` has 14 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `ha-cde-lightband` to the rest of the system?",
+      "why": "1 weakly-connected nodes found - possible missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `CdeApiClient` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08418367346938775 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `CdeApiClient` connect `CdeApiClient` to `CdeDataUpdateCoordinator`, `cde_api.py`, `CdeConfigFlow`?",
+      "why": "High betweenness centrality (0.185) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 10 inferred relationships involving `CdeApiClient` (e.g. with `CdeAuthError` and `CdeConnectionError`) actually correct?",
+      "why": "`CdeApiClient` has 10 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `CdeDataUpdateCoordinator` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.06567992599444958 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

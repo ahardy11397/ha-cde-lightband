@@ -63,6 +63,57 @@ The integration has been installed directly onto your Home Assistant server at:
 
 ---
 
+## Knowledge Graph & Code Analysis
+
+This project includes a [graphify](https://github.com/safishamsi/graphify) knowledge graph for interactive code exploration and architecture documentation.
+
+### Generated Outputs
+
+| File | Description |
+|------|-------------|
+| `graphify-out/graph.json` | GraphRAG-ready JSON (NetworkX compatible) |
+| `graphify-out/GRAPH_REPORT.md` | Plain-language architecture report |
+| `graphify-out/graph.html` | Interactive graph visualization (open in browser) |
+
+### Quick Stats (from latest build)
+- **262 nodes** · **493 edges** · **13 communities**
+- **Core abstractions** (God Nodes): `CdeDataUpdateCoordinator`, `CdeApiClient`, `CdeConnectionError`, `CdeUsageRecord`, `CdeBillingData`
+- **Communities**: `CdeApiClient` (API & auth), `CdeDataUpdateCoordinator` (coordinator & sensors), `gwt_rpc.py` (GWT protocol), `CdeUsageRecord` (usage & tests), `test_config_flow.py`, `steps` (GitHub Actions), `manifest.json`, `async_setup_entry` (lifecycle)
+
+### Explore the Graph
+
+```bash
+# Install graphify
+pip install graphifyy
+
+# Open interactive HTML
+open graphify-out/graph.html
+
+# Query the graph from CLI
+graphify query "How does CdeDataUpdateCoordinator fetch billing data?"
+
+# Trace a path between components
+graphify path "CdeDataUpdateCoordinator" "CdeApiClient"
+
+# Explain a component
+graphify explain "CdeApiClient"
+```
+
+### Regenerate After Changes
+
+```bash
+# Full rebuild (after major changes)
+graphify . --code-only
+
+# Incremental update (after code edits - no LLM cost)
+graphify update . --code-only
+
+# Re-cluster only (rename communities)
+graphify cluster-only .
+```
+
+---
+
 ## Local Development & Testing
 
 Run tests in the project repository:

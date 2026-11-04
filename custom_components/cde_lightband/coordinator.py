@@ -8,7 +8,8 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import aiohttp
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_conversion import EnergyConverter
 
@@ -56,13 +57,21 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=scan_minutes),
         )
 
-        session = async_get_clientsession(hass)
+        self._session: aiohttp.ClientSession = async_create_clientsession(hass)
         self.client = CdeApiClient(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
-            session=session,
+            session=self._session,
         )
         self._account_number: str = entry.unique_id or "Unknown"
+
+    async def async_shutdown(self) -> None:
+        """Close the dedicated aiohttp session."""
+        await super().async_shutdown()
+        if self.client:
+            await self.client.close()
+        if self._session and not self._session.closed:
+            await self._session.close()
 
     @property
     def account_number(self) -> str:

@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .cde_api import CdeApiClient
 from .const import (
@@ -47,7 +47,7 @@ class CdeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            session = async_get_clientsession(self.hass)
+            session = async_create_clientsession(self.hass)
             client = CdeApiClient(username=username, password=password, session=session)
 
             try:
@@ -72,6 +72,11 @@ class CdeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD: password,
                     },
                 )
+            finally:
+                try:
+                    await session.close()
+                except Exception:
+                    _LOGGER.debug("Error closing config flow session", exc_info=True)
 
         return self.async_show_form(
             step_id="user",

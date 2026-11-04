@@ -74,18 +74,20 @@ class CdeUsageRecord:
 
 
 class CdeApiClient:
-    """Asynchronous client connecting to CDE Lightband portal via GWT-RPC."""
+    """Asynchronous client connecting to CDE Lightband portal via GWT-RPC.
+
+    The caller is responsible for providing and managing the aiohttp.ClientSession lifecycle.
+    """
 
     def __init__(
         self,
         username: str,
         password: str,
-        session: aiohttp.ClientSession | None = None,
+        session: aiohttp.ClientSession,
     ) -> None:
         self.username = username
         self.password = password
         self._session = session
-        self._own_session = session is None
         self._is_authenticated = False
         self._token: str | None = None
 
@@ -114,16 +116,8 @@ class CdeApiClient:
     def service_address(self) -> str:
         return self._service_address
 
-    async def _get_session(self) -> aiohttp.ClientSession:
-        if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession()
-            self._own_session = True
-        return self._session
-
     async def close(self) -> None:
-        """Close client session if owned."""
-        if self._own_session and self._session and not self._session.closed:
-            await self._session.close()
+        """No-op: session lifecycle is managed by the caller."""
 
     async def _post_gwt(self, payload: str) -> dict[str, Any]:
         """Low-level POST of raw GWT payload to CDE GWT RPC servlet."""
@@ -135,8 +129,7 @@ class CdeApiClient:
         }
 
         try:
-            session = await self._get_session()
-            async with session.post(
+            async with self._session.post(
                 CDE_RPC_ENDPOINT,
                 data=payload.encode("utf-8"),
                 headers=headers,
