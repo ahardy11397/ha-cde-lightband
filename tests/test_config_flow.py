@@ -107,3 +107,85 @@ async def test_options_flow(hass: HomeAssistant):
     )
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_SCAN_INTERVAL: 120, CONF_HISTORY_DAYS: 45}
+
+
+@pytest.mark.asyncio
+async def test_reauth_successful(hass: HomeAssistant):
+    """Test reauth flow updates password on successful authentication."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="CDE Lightband (123456)",
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "old_password"},
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "custom_components.cde_lightband.cde_api.CdeApiClient.authenticate",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "new_password"},
+        )
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
+        assert entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.asyncio
+async def test_reauth_invalid_auth(hass: HomeAssistant):
+    """Test reauth flow error handling when credentials fail."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="CDE Lightband (123456)",
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "old_password"},
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "custom_components.cde_lightband.cde_api.CdeApiClient.authenticate",
+        side_effect=CdeAuthError("Invalid username or password"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "wrong_password"},
+        )
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.asyncio
+async def test_reauth_cannot_connect(hass: HomeAssistant):
+    """Test reauth flow error handling when connection fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="CDE Lightband (123456)",
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "old_password"},
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "custom_components.cde_lightband.cde_api.CdeApiClient.authenticate",
+        side_effect=CdeConnectionError("Network down"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "new_password"},
+        )
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}

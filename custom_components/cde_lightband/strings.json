@@ -8,6 +8,13 @@
           "username": "Username / Email",
           "password": "Password"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate with CDE Lightband",
+        "description": "Please enter the password for {username} to reauthenticate.",
+        "data": {
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -16,7 +23,8 @@
       "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "This CDE Lightband account is already configured."
+      "already_configured": "This CDE Lightband account is already configured.",
+      "reauth_successful": "Re-authentication was successful"
     }
   },
   "options": {

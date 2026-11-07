@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 import aiohttp
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -38,7 +39,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_HISTORY_DAYS,
 )
-from .exceptions import CdeError
+from .exceptions import CdeAuthError, CdeError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +112,8 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "billing": billing,
                 "usage": usage_records,
             }
+        except CdeAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except CdeError as err:
             raise UpdateFailed(f"Error communicating with CDE Lightband: {err}") from err
         except Exception as err:

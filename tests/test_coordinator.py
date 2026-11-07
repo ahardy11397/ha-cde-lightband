@@ -4,13 +4,14 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch, MagicMock
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.cde_lightband.const import DOMAIN, CONF_USERNAME, CONF_PASSWORD
 from custom_components.cde_lightband.coordinator import CdeDataUpdateCoordinator
 from custom_components.cde_lightband.cde_api import CdeBillingData, CdeUsageRecord
-from custom_components.cde_lightband.exceptions import CdeConnectionError
+from custom_components.cde_lightband.exceptions import CdeAuthError, CdeConnectionError
 
 @pytest.mark.asyncio
 async def test_coordinator_update_success(hass: HomeAssistant):
@@ -69,6 +70,25 @@ async def test_coordinator_update_failure_raises_update_failed(hass: HomeAssista
     ):
         coordinator = CdeDataUpdateCoordinator(hass, entry)
         with pytest.raises(UpdateFailed):
+            await coordinator._async_update_data()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_auth_error_raises_config_entry_auth_failed(hass: HomeAssistant):
+    """Test auth error raises ConfigEntryAuthFailed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.cde_lightband.cde_api.CdeApiClient.fetch_billing_data",
+        side_effect=CdeAuthError("Invalid credentials"),
+    ):
+        coordinator = CdeDataUpdateCoordinator(hass, entry)
+        with pytest.raises(ConfigEntryAuthFailed):
             await coordinator._async_update_data()
 
 

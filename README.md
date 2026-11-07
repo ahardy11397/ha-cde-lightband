@@ -30,13 +30,26 @@ Automatically exposes account billing details as native Home Assistant entities:
 
 ---
 
-## Installation & Setup
+## Installation
 
-### 1. Verification of Server Installation
-The integration has been installed directly onto your Home Assistant server at:
-`/homeassistant/custom_components/cde_lightband`
+### Method 1: HACS (Recommended)
 
-### 2. Pairing in the Home Assistant UI
+1. Ensure [HACS](https://hacs.xyz/) is installed and configured in Home Assistant.
+2. In Home Assistant, navigate to **HACS > Integrations**.
+3. Search for **CDE Lightband** (or add `https://github.com/ahardy11397/ha-cde-lightband` as a Custom Repository under HACS if not yet listed in the default store).
+4. Click **Download**, then restart Home Assistant when prompted.
+
+### Method 2: Manual Installation
+
+1. Download the latest release from the [Releases](https://github.com/ahardy11397/ha-cde-lightband/releases) page.
+2. Copy the `custom_components/cde_lightband` directory into your Home Assistant installation's `config/custom_components/` directory (so the integration resides at `custom_components/cde_lightband`).
+3. Restart Home Assistant.
+
+---
+
+## Configuration & Setup
+
+### 1. Pairing in the Home Assistant UI
 1. In Home Assistant, navigate to **Settings > Devices & Services**.
 2. Click **Add Integration** in the bottom right corner.
 3. Search for **CDE Lightband**.
@@ -45,7 +58,7 @@ The integration has been installed directly onto your Home Assistant server at:
    * **Password**
 5. Click **Submit**. Home Assistant will authenticate with CDE Lightband, detect your account, and register all billing and energy sensors!
 
-### 3. Adding to the Energy Dashboard
+### 2. Adding to the Energy Dashboard
 1. Go to **Settings > Dashboards > Energy**.
 2. Under **Electricity Grid**, click **Add Consumption**.
 3. Select **CDE Lightband Electric Usage**.
@@ -116,9 +129,9 @@ graphify cluster-only .
 
 ## Local Development & Testing
 
-Run tests in the project repository:
+Clone the repository and run the test suite:
 ```bash
-cd /mnt/ssd/projects/ha-cde-lightband
-source .venv/bin/activate
-pytest
+git clone https://github.com/ahardy11397/ha-cde-lightband.git
+cd ha-cde-lightband
+uv run pytest
 ```
