@@ -1,10 +1,13 @@
 """Constants for the CDE Lightband integration."""
 
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
+
 DOMAIN = "cde_lightband"
 
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
-CONF_SCAN_INTERVAL = "scan_interval"
 CONF_HISTORY_DAYS = "history_days"
 
 DEFAULT_SCAN_INTERVAL = 60  # minutes

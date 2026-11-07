@@ -54,6 +54,7 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"CDE Lightband ({entry.unique_id})",
             update_interval=timedelta(minutes=scan_minutes),
         )
