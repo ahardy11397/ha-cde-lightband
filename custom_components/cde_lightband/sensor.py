@@ -27,6 +27,16 @@ from .const import (
     ATTR_LAST_BILL_DATE,
     ATTR_METER_ID,
     ATTR_READING_DATE,
+    ATTR_MONTH_TO_DATE_KWH,
+    ATTR_ENERGY_RATE,
+    ATTR_CUSTOMER_CHARGE,
+    ATTR_GRID_ACCESS_CHARGE,
+    ATTR_INTERNET_PLAN,
+    ATTR_INTERNET_PRICE,
+    ATTR_RATE_MONTH,
+    ATTR_RATES_FETCHED,
+    CONF_INTERNET_PLAN,
+    DEFAULT_INTERNET_PLAN,
 )
 from .coordinator import CdeDataUpdateCoordinator
 
@@ -45,6 +55,7 @@ async def async_setup_entry(
         CdeLastPaymentSensor(coordinator),
         CdeLastBillSensor(coordinator),
         CdeDailyEnergySensor(coordinator),
+        CdeEstimatedBillSensor(coordinator),
     ]
 
     async_add_entities(entities)
@@ -219,3 +230,57 @@ class CdeDailyEnergySensor(CdeBaseSensor):
             ATTR_METER_ID: latest.meter_id,
             ATTR_READING_DATE: latest.reading_date or latest.timestamp,
         }
+
+
+class CdeEstimatedBillSensor(CdeBaseSensor):
+    """Sensor for the estimated current-month electric bill (USD)."""
+
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_native_unit_of_measurement = "USD"
+    _attr_icon = "mdi:cash"
+
+    def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
+        super().__init__(coordinator, "estimated_bill", "Estimated bill")
+
+    def _plan(self) -> str:
+        return self.coordinator.entry.options.get(CONF_INTERNET_PLAN, DEFAULT_INTERNET_PLAN)
+
+    @property
+    def native_value(self) -> float | None:
+        rates = self.coordinator.rate_data
+        if rates is None:
+            return None
+        kwh = self.coordinator.month_to_date_kwh()
+        if kwh <= 0:
+            return None
+        plan = self._plan()
+        internet_price = 0.0
+        if plan != DEFAULT_INTERNET_PLAN:
+            internet_price = rates.internet_prices.get(plan)
+            if internet_price is None:
+                return None  # never publish an estimate missing the internet charge
+        energy_cost = round(kwh * rates.energy_rate, 2)
+        return round(
+            energy_cost + rates.customer_charge + rates.grid_access_charge(kwh) + internet_price,
+            2,
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        rates = self.coordinator.rate_data
+        if not rates:
+            return {}
+        plan = self._plan()
+        kwh = self.coordinator.month_to_date_kwh()
+        attrs: dict[str, Any] = {
+            ATTR_MONTH_TO_DATE_KWH: kwh,
+            ATTR_ENERGY_RATE: rates.energy_rate,
+            ATTR_CUSTOMER_CHARGE: rates.customer_charge,
+            ATTR_GRID_ACCESS_CHARGE: rates.grid_access_charge(kwh),
+            ATTR_RATE_MONTH: rates.rate_month,
+            ATTR_RATES_FETCHED: rates.fetched_at,
+        }
+        if plan != DEFAULT_INTERNET_PLAN:
+            attrs[ATTR_INTERNET_PLAN] = plan
+            attrs[ATTR_INTERNET_PRICE] = rates.internet_prices.get(plan)
+        return attrs
