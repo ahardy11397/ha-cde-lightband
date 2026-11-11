@@ -1,10 +1,11 @@
 """API Client for CDE Lightband (Daffron eBusiness GWT-RPC)."""
 from __future__ import annotations
 
+import html as html_lib
 import json
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 import aiohttp
@@ -71,6 +72,113 @@ class CdeUsageRecord:
     kwh: float
     meter_id: str = ""
     reading_date: str | None = None
+
+
+@dataclass
+class CdeRateData:
+    """Published residential rates from the CDE Lightband website."""
+    energy_rate: float
+    customer_charge: float
+    grid_access_tiers: list[tuple[float | None, float]]
+    rate_month: str
+    internet_prices: dict[str, float] = field(default_factory=dict)
+    fetched_at: str | None = None
+
+    def grid_access_charge(self, kwh: float) -> float:
+        """Tiered grid access charge for a month-to-date kWh total."""
+        for upper, charge in self.grid_access_tiers:
+            if upper is None or kwh <= upper:
+                return charge
+        return self.grid_access_tiers[-1][1]
+
+
+def parse_rates_html(html: str) -> CdeRateData | None:
+    """Parse the published Residential rate table from the CDE rates page.
+
+    The page renders the Residential table between the ``<h2 id="residential">``
+    heading and the next section heading. Each cell's text lives inside a
+    ``<div class="mtr-cell-content">`` element (the ``data-mtr-content``
+    attributes only repeat the column header names), so rows are read from
+    those divs. Fails soft (returns ``None``) whenever the expected structure
+    is not found.
+    """
+    idx = html.find('<h2 id="residential"')
+    if idx == -1:
+        return None
+    section = html[idx:]
+    next_h2 = section.find('<h2 id="', len('<h2 id="residential"'))
+    if next_h2 != -1:
+        section = section[:next_h2]
+
+    def _cell_texts(row_html: str) -> list[str]:
+        texts = []
+        for m in re.finditer(r'<div class="mtr-cell-content">(.*?)</div>', row_html, re.S):
+            text = re.sub(r"<[^>]+>", "", m.group(1))
+            texts.append(re.sub(r"\s+", " ", html_lib.unescape(text)).strip())
+        return texts
+
+    rows = [_cell_texts(r) for r in re.findall(r"<tr>(.*?)</tr>", section, re.S)]
+    rows = [r for r in rows if len(r) == 3]
+    if len(rows) < 3:
+        return None
+
+    rate_month = re.sub(r"\s*Retail Rate\s*$", "", rows[0][2].strip())
+    customer_charge: float | None = None
+    energy_rate: float | None = None
+    tiers: list[tuple[float | None, float]] = []
+
+    for desc, ctype, amount in rows[1:]:
+        m = re.search(r"\$?\s*([\d,]+(?:\.\d+)?)", amount)
+        if not m:
+            continue
+        value = float(m.group(1).replace(",", ""))
+        label = ctype.strip()
+        if label == "Customer":
+            customer_charge = value
+        elif label == "Energy":
+            energy_rate = value
+        elif "Grid Access Charge" in label:
+            range_m = re.match(r"([\d,]+)\s*[–—-]\s*([\d,]+)\s*kWh", desc.strip())
+            if range_m:
+                tiers.append((float(range_m.group(2).replace(",", "")), value))
+            else:
+                single_m = re.match(r"([\d,]+)\s*kWh", desc.strip())
+                if single_m:
+                    tiers.append((None, value))
+
+    if energy_rate is None or customer_charge is None or not tiers:
+        return None
+    return CdeRateData(
+        energy_rate=energy_rate,
+        customer_charge=customer_charge,
+        grid_access_tiers=tiers,
+        rate_month=rate_month,
+    )
+
+
+def parse_internet_prices_html(html: str) -> dict[str, float] | None:
+    """Parse residential internet plan prices from the CDE internet page.
+
+    Every plan renders its price as ``$<dollars></h2>`` followed within a
+    few hundred characters by ``.<cents>/month</h2>``, preceded by a speed
+    heading (``300``/``600`` Mbps as bare numbers, ``1 Gig``/``2.5 Gig``
+    with a suffix inside the heading). Returns ``None`` when nothing
+    parseable is found.
+    """
+    prices: dict[str, float] = {}
+    for m in re.finditer(r"\$([0-9,]+)</h2>", html):
+        cents_m = re.search(r"\.([0-9]{2})\s*/\s*month", html[m.end():m.end() + 400])
+        if not cents_m:
+            continue
+        speed_matches = re.findall(r">([\d.]+)(\s*Gig)?\s*</h2>", html[:m.start()])
+        if not speed_matches:
+            continue
+        speed_str, gig_suffix = speed_matches[-1]
+        speed = float(speed_str)
+        if gig_suffix:
+            speed *= 1000
+        prices[str(int(speed))] = float(f"{int(m.group(1).replace(',', ''))}.{cents_m.group(1)}")
+    return prices or None
 
 
 class CdeApiClient:
