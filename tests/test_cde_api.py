@@ -199,3 +199,30 @@ async def test_fetch_internet_prices_parses_published_prices():
 async def test_fetch_internet_prices_failure_returns_none():
     client = CdeApiClient(username="u", password="p", session=_FakeSession(_FakeResponse(404, "")))
     assert await client.fetch_internet_prices() is None
+
+
+@pytest.mark.asyncio
+async def test_fetch_rates_passes_explicit_timeout():
+    """The public-page scrapes must not rely on aiohttp's 300s default."""
+    from pathlib import Path
+
+    class _SpySession(_FakeSession):
+        def __init__(self, response):
+            super().__init__(response=response)
+            self.get_kwargs = []
+
+        def get(self, url, **kwargs):
+            self.get_kwargs.append(kwargs)
+            return super().get(url, **kwargs)
+
+    html = (Path(__file__).parent / "fixtures" / "rates_page.html").read_text(encoding="utf-8")
+    session = _SpySession(_FakeResponse(200, html))
+    client = CdeApiClient(username="u", password="p", session=session)
+    await client.fetch_rates()
+    assert "timeout" in session.get_kwargs[0]
+
+    html_internet = (Path(__file__).parent / "fixtures" / "internet_page.html").read_text(encoding="utf-8")
+    session2 = _SpySession(_FakeResponse(200, html_internet))
+    client2 = CdeApiClient(username="u", password="p", session=session2)
+    await client2.fetch_internet_prices()
+    assert "timeout" in session2.get_kwargs[0]

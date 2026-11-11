@@ -460,7 +460,7 @@ class CdeApiClient:
         Fail-soft: every failure path logs a warning and returns ``None``.
         """
         try:
-            async with self._session.get(RATES_URL) as resp:
+            async with self._session.get(RATES_URL, timeout=aiohttp.ClientTimeout(total=20)) as resp:
                 if resp.status != 200:
                     _LOGGER.warning("CDE rates page returned HTTP %s", resp.status)
                     return None
@@ -481,7 +481,7 @@ class CdeApiClient:
         Fail-soft: every failure path logs a warning and returns ``None``.
         """
         try:
-            async with self._session.get(INTERNET_URL) as resp:
+            async with self._session.get(INTERNET_URL, timeout=aiohttp.ClientTimeout(total=20)) as resp:
                 if resp.status != 200:
                     _LOGGER.warning("CDE internet page returned HTTP %s", resp.status)
                     return None
