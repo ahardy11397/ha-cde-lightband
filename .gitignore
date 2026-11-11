@@ -5,3 +5,4 @@ __pycache__/
 .coverage
 .pytest_cache/
 uv.lock
+graphify-out/cache/last_query_stamp
