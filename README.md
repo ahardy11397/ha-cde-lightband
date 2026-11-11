@@ -22,7 +22,15 @@ Automatically exposes account billing details as native Home Assistant entities:
 * Add CDE Lightband as an **Electricity Grid** source under **Settings > Dashboards > Energy**.
 * Automatically backfills historical smart meter readings on setup.
 
-### 3. Native UI Configuration (Config Flow)
+### 3. Estimated Bill Sensor
+* `sensor.cde_estimated_bill`: Running estimate of the current calendar month's electric bill (`USD`), computed as month-to-date kWh × the published energy rate, plus the customer charge and tiered grid access charge.
+* If you also subscribe to CDE Lightband internet, pick your plan (300 Mbps / 600 Mbps / 1 Gig / 2.5 Gig) under **Configure > Options** and its monthly price is added to the estimate.
+* Rates are scraped live from CDE's [Rates & Fees](https://cdelightband.com/residential/energy/rates-fees/) page on every update, so rate changes are picked up automatically; if the page is temporarily unavailable the last-known rates are used.
+* Shows `unknown` until rates have been fetched and the first usage day of the current month has landed.
+* Covers CDE's published charges only — it does not include taxes or TVA fuel-cost adjustments, so it will run slightly below the actual bill.
+* Attributes show exactly how the estimate was built: `month_to_date_kwh`, `energy_rate`, `customer_charge`, `grid_access_charge`, `internet_plan`, `internet_price`, `rate_month`, and `rates_fetched`.
+
+### 4. Native UI Configuration (Config Flow)
 * Easily configured via **Settings > Devices & Services > Add Integration**.
 * Securely manages authentication against the CDE Lightband customer portal (`myaccount.clarksvillede.com`).
 * Automatically detects your account number and binds to a single device in the Home Assistant Device Registry.
