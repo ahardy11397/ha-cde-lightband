@@ -133,3 +133,69 @@ async def test_connection_error_on_network_failure():
     with pytest.raises(CdeConnectionError):
         await client.authenticate()
     await client.close()
+
+
+class _FakeResponse:
+    def __init__(self, status, text):
+        self.status = status
+        self._text = text
+
+    async def text(self):
+        return self._text
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+class _FakeSession:
+    def __init__(self, response=None, exc=None):
+        self._response = response
+        self._exc = exc
+
+    def get(self, url, **kwargs):
+        if self._exc is not None:
+            raise self._exc
+        return self._response
+
+
+@pytest.mark.asyncio
+async def test_fetch_rates_parses_published_table():
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures" / "rates_page.html").read_text(encoding="utf-8")
+    client = CdeApiClient(username="u", password="p", session=_FakeSession(_FakeResponse(200, html)))
+    rates = await client.fetch_rates()
+    assert rates is not None
+    assert rates.energy_rate == 0.11010
+    assert rates.customer_charge == 30.50
+    assert rates.fetched_at is not None
+
+
+@pytest.mark.asyncio
+async def test_fetch_rates_http_error_returns_none():
+    client = CdeApiClient(username="u", password="p", session=_FakeSession(_FakeResponse(500, "")))
+    assert await client.fetch_rates() is None
+
+
+@pytest.mark.asyncio
+async def test_fetch_rates_connection_error_returns_none():
+    import aiohttp
+    client = CdeApiClient(username="u", password="p", session=_FakeSession(exc=aiohttp.ClientError("boom")))
+    assert await client.fetch_rates() is None
+
+
+@pytest.mark.asyncio
+async def test_fetch_internet_prices_parses_published_prices():
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures" / "internet_page.html").read_text(encoding="utf-8")
+    client = CdeApiClient(username="u", password="p", session=_FakeSession(_FakeResponse(200, html)))
+    prices = await client.fetch_internet_prices()
+    assert prices == {"300": 53.95, "600": 73.95, "1000": 94.95, "2500": 123.95}
+
+
+@pytest.mark.asyncio
+async def test_fetch_internet_prices_failure_returns_none():
+    client = CdeApiClient(username="u", password="p", session=_FakeSession(_FakeResponse(404, "")))
+    assert await client.fetch_internet_prices() is None

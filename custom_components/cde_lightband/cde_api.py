@@ -11,6 +11,7 @@ from typing import Any
 import aiohttp
 
 from .exceptions import CdeAuthError, CdeConnectionError, CdeDataError
+from .const import INTERNET_URL, RATES_URL
 from .gwt_rpc import (
     CDE_MODULE_BASE,
     CDE_PERMUTATION,
@@ -452,6 +453,47 @@ class CdeApiClient:
             last_bill_date=last_bill_date,
             service_address=self._service_address,
         )
+
+    async def fetch_rates(self) -> CdeRateData | None:
+        """Fetch and parse the published residential rates from the CDE website.
+
+        Fail-soft: every failure path logs a warning and returns ``None``.
+        """
+        try:
+            async with self._session.get(RATES_URL) as resp:
+                if resp.status != 200:
+                    _LOGGER.warning("CDE rates page returned HTTP %s", resp.status)
+                    return None
+                body = await resp.text()
+        except Exception as err:
+            _LOGGER.warning("Could not fetch CDE rates page: %s", err)
+            return None
+        rates = parse_rates_html(body)
+        if rates is None:
+            _LOGGER.warning("Could not parse residential rates from the CDE rates page")
+            return None
+        rates.fetched_at = datetime.now(timezone.utc).isoformat()
+        return rates
+
+    async def fetch_internet_prices(self) -> dict[str, float] | None:
+        """Fetch and parse residential internet plan prices from the CDE website.
+
+        Fail-soft: every failure path logs a warning and returns ``None``.
+        """
+        try:
+            async with self._session.get(INTERNET_URL) as resp:
+                if resp.status != 200:
+                    _LOGGER.warning("CDE internet page returned HTTP %s", resp.status)
+                    return None
+                body = await resp.text()
+        except Exception as err:
+            _LOGGER.warning("Could not fetch CDE internet page: %s", err)
+            return None
+        prices = parse_internet_prices_html(body)
+        if prices is None:
+            _LOGGER.warning("Could not parse internet prices from the CDE internet page")
+            return None
+        return prices
 
     async def fetch_usage_data(self, days: int = 30) -> list[CdeUsageRecord]:
         """Fetch smart meter interval usage records from Charts drilldown."""

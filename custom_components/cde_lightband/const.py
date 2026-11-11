@@ -8,6 +8,9 @@ from homeassistant.const import (
 
 DOMAIN = "cde_lightband"
 
+RATES_URL = "https://cdelightband.com/residential/energy/rates-fees/"
+INTERNET_URL = "https://cdelightband.com/residential/internet/"
+
 CONF_HISTORY_DAYS = "history_days"
 
 DEFAULT_SCAN_INTERVAL = 60  # minutes
