@@ -11,6 +11,7 @@ from custom_components.cde_lightband.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_HISTORY_DAYS,
+    CONF_INTERNET_PLAN,
 )
 from custom_components.cde_lightband.exceptions import CdeAuthError, CdeConnectionError
 
@@ -106,7 +107,11 @@ async def test_options_flow(hass: HomeAssistant):
         user_input={CONF_SCAN_INTERVAL: 120, CONF_HISTORY_DAYS: 45},
     )
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {CONF_SCAN_INTERVAL: 120, CONF_HISTORY_DAYS: 45}
+    assert result2["data"] == {
+        CONF_SCAN_INTERVAL: 120,
+        CONF_HISTORY_DAYS: 45,
+        "internet_plan": "none",
+    }
 
 
 @pytest.mark.asyncio
@@ -189,3 +194,26 @@ async def test_reauth_cannot_connect(hass: HomeAssistant):
         )
         assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.asyncio
+async def test_options_flow_includes_internet_plan(hass: HomeAssistant):
+    """Options flow shows the internet plan dropdown and stores the choice."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert CONF_INTERNET_PLAN in result["data_schema"].schema
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 60, CONF_HISTORY_DAYS: 30, CONF_INTERNET_PLAN: "300"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_INTERNET_PLAN] == "300"

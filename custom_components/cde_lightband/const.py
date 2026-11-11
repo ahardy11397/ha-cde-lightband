@@ -16,6 +16,16 @@ CONF_HISTORY_DAYS = "history_days"
 DEFAULT_SCAN_INTERVAL = 60  # minutes
 DEFAULT_HISTORY_DAYS = 30   # days
 
+CONF_INTERNET_PLAN = "internet_plan"
+DEFAULT_INTERNET_PLAN = "none"
+INTERNET_PLAN_OPTIONS = {
+    "none": "None",
+    "300": "300 Mbps",
+    "600": "600 Mbps",
+    "1000": "1 Gig",
+    "2500": "2.5 Gig",
+}
+
 ATTR_ACCOUNT_NUMBER = "account_number"
 ATTR_SERVICE_ADDRESS = "service_address"
 ATTR_DUE_DATE = "due_date"

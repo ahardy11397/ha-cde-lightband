@@ -18,8 +18,11 @@ from .const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_HISTORY_DAYS,
+    CONF_INTERNET_PLAN,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_HISTORY_DAYS,
+    DEFAULT_INTERNET_PLAN,
+    INTERNET_PLAN_OPTIONS,
 )
 from .exceptions import CdeAuthError, CdeConnectionError
 
@@ -164,6 +167,10 @@ class CdeOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_HISTORY_DAYS,
                     default=options.get(CONF_HISTORY_DAYS, DEFAULT_HISTORY_DAYS),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=90)),
+                vol.Optional(
+                    CONF_INTERNET_PLAN,
+                    default=options.get(CONF_INTERNET_PLAN, DEFAULT_INTERNET_PLAN),
+                ): vol.In(INTERNET_PLAN_OPTIONS),
             }
         )
 
