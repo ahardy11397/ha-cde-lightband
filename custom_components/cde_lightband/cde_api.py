@@ -120,15 +120,22 @@ def parse_rates_html(html: str) -> CdeRateData | None:
 
     rows = [_cell_texts(r) for r in re.findall(r"<tr>(.*?)</tr>", section, re.S)]
     rows = [r for r in rows if len(r) == 3]
-    if len(rows) < 3:
+
+    # The header row is the first one whose third cell ends in "Retail Rate";
+    # ignore any stray 3-cell rows (e.g. other tables) above it.
+    header_idx = next(
+        (i for i, r in enumerate(rows) if re.search(r"Retail Rate\s*$", r[2])),
+        None,
+    )
+    if header_idx is None:
         return None
 
-    rate_month = re.sub(r"\s*Retail Rate\s*$", "", rows[0][2].strip())
+    rate_month = re.sub(r"\s*Retail Rate\s*$", "", rows[header_idx][2].strip())
     customer_charge: float | None = None
     energy_rate: float | None = None
     tiers: list[tuple[float | None, float]] = []
 
-    for desc, ctype, amount in rows[1:]:
+    for desc, ctype, amount in rows[header_idx + 1:]:
         m = re.search(r"\$?\s*([\d,]+(?:\.\d+)?)", amount)
         if not m:
             continue

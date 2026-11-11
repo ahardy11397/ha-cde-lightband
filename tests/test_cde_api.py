@@ -219,10 +219,10 @@ async def test_fetch_rates_passes_explicit_timeout():
     session = _SpySession(_FakeResponse(200, html))
     client = CdeApiClient(username="u", password="p", session=session)
     await client.fetch_rates()
-    assert "timeout" in session.get_kwargs[0]
+    assert session.get_kwargs[0]["timeout"].total == 20
 
     html_internet = (Path(__file__).parent / "fixtures" / "internet_page.html").read_text(encoding="utf-8")
     session2 = _SpySession(_FakeResponse(200, html_internet))
     client2 = CdeApiClient(username="u", password="p", session=session2)
     await client2.fetch_internet_prices()
-    assert "timeout" in session2.get_kwargs[0]
+    assert session2.get_kwargs[0]["timeout"].total == 20
