@@ -219,10 +219,46 @@ async def test_fetch_rates_passes_explicit_timeout():
     session = _SpySession(_FakeResponse(200, html))
     client = CdeApiClient(username="u", password="p", session=session)
     await client.fetch_rates()
-    assert "timeout" in session.get_kwargs[0]
+    assert session.get_kwargs[0]["timeout"].total == 20
 
     html_internet = (Path(__file__).parent / "fixtures" / "internet_page.html").read_text(encoding="utf-8")
     session2 = _SpySession(_FakeResponse(200, html_internet))
     client2 = CdeApiClient(username="u", password="p", session=session2)
     await client2.fetch_internet_prices()
-    assert "timeout" in session2.get_kwargs[0]
+    assert session2.get_kwargs[0]["timeout"].total == 20
+
+
+@pytest.mark.asyncio
+async def test_fetch_usage_data_skips_unparseable_dates():
+    """Rows with dates that can't be parsed are dropped, not stamped with now()."""
+    client = CdeApiClient(username="user", password="pass", session=_mock_session())
+    client._is_authenticated = True
+    client._token = "9876543210"
+    client._account_number = "1234567"
+    client._sub_account = "001"
+    client._msserv = "1"
+    client._meter_id = "MTR1234"
+
+    async def mock_post_json(service, action, payload=None):
+        if service == "Charts" and action == "usage":
+            return {
+                "data": [
+                    [{"value": "November 2026", "lParm": "Nov, 2026"}]
+                ]
+            }
+        elif service == "Charts" and action == "table":
+            return {
+                "data": [
+                    [{"value": "Nov 1, 2026"}, {"value": "28.0"}],
+                    [{"value": "garbage-date"}, {"value": "99.0"}],
+                    [{"value": ""}, {"value": "5.0"}],
+                ]
+            }
+        return {}
+
+    with patch.object(client, "_post_json_service", side_effect=mock_post_json):
+        records = await client.fetch_usage_data(days=30)
+        assert len(records) == 1
+        assert records[0].kwh == 28.0
+        assert records[0].reading_date == "2026-11-01"
+    await client.close()
