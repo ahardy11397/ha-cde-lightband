@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for CDE Lightband integration."""
 from __future__ import annotations
 
+import dataclasses
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -29,15 +30,17 @@ try:
 except ImportError:
     RECORDER_AVAILABLE = False
 
-from .cde_api import CdeApiClient, CdeBillingData, CdeUsageRecord
+from .cde_api import CdeApiClient, CdeBillingData, CdeRateData, CdeUsageRecord
 from .const import (
     DOMAIN,
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_HISTORY_DAYS,
+    CONF_INTERNET_PLAN,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_HISTORY_DAYS,
+    DEFAULT_INTERNET_PLAN,
 )
 from .exceptions import CdeAuthError, CdeError
 
@@ -66,6 +69,8 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=self._session,
         )
         self._account_number: str = entry.unique_id or "Unknown"
+        self._last_rates: CdeRateData | None = None
+        self._last_internet_prices: dict[str, float] = {}
 
     async def async_shutdown(self) -> None:
         """Close the dedicated aiohttp session."""
@@ -105,6 +110,9 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             days = self.entry.options.get(CONF_HISTORY_DAYS, DEFAULT_HISTORY_DAYS)
             usage_records = await self.client.fetch_usage_data(days=days)
 
+            plan = self.entry.options.get(CONF_INTERNET_PLAN, DEFAULT_INTERNET_PLAN)
+            rates = await self._async_fetch_rates(plan)
+
             # Ingest usage into Energy Dashboard external statistics
             if usage_records:
                 await self._async_sync_statistics(usage_records)
@@ -112,6 +120,7 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return {
                 "billing": billing,
                 "usage": usage_records,
+                "rates": rates,
             }
         except CdeAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
@@ -120,6 +129,37 @@ class CdeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Exception as err:
             _LOGGER.exception("Unexpected error in CDE coordinator: %s", err)
             raise UpdateFailed(f"Unexpected error: {err}") from err
+
+    async def _async_fetch_rates(self, plan: str) -> CdeRateData | None:
+        """Fetch published rates, caching last-known-good values. Never raises."""
+        try:
+            rates = await self.client.fetch_rates()
+            if rates is not None:
+                self._last_rates = rates
+            if plan != DEFAULT_INTERNET_PLAN:
+                prices = await self.client.fetch_internet_prices()
+                if prices is not None:
+                    self._last_internet_prices = prices
+        except Exception as err:
+            _LOGGER.warning("Could not refresh CDE rates: %s", err)
+        if self._last_rates is None:
+            return None
+        return dataclasses.replace(
+            self._last_rates,
+            internet_prices=dict(self._last_internet_prices) if plan != DEFAULT_INTERNET_PLAN else {},
+        )
+
+    @property
+    def rate_data(self) -> CdeRateData | None:
+        """Return the latest parsed rate data."""
+        if self.data:
+            return self.data.get("rates")
+        return None
+
+    def month_to_date_kwh(self, now: datetime | None = None) -> float:
+        """Sum usage records in the current calendar month (UTC)."""
+        current = (now or datetime.now(timezone.utc)).strftime("%Y-%m")
+        return sum(r.kwh for r in self.usage_records if r.timestamp[:7] == current)
 
     async def _async_sync_statistics(self, records: list[CdeUsageRecord]) -> None:
         """Insert historical consumption into recorder external statistics."""
