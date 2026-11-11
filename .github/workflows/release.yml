@@ -1,0 +1,62 @@
+name: Release
+
+# Publishes a vX.Y.Z GitHub release whenever a push to master contains a
+# manifest.json version whose tag does not exist yet. HACS offers the update
+# from these releases, so a version bump in a PR is all it takes to ship.
+on:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect version bump
+        id: version
+        run: |
+          VERSION=$(jq -r .version custom_components/cde_lightband/manifest.json)
+          TAG="v${VERSION}"
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists; nothing to release."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New version ${TAG}; will release."
+            echo "created=true" >> "$GITHUB_OUTPUT"
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build release notes
+        if: steps.version.outputs.created == 'true'
+        run: |
+          PREV=$(git tag --sort=-creatordate | head -1 || true)
+          RANGE="${PREV:+${PREV}..}HEAD"
+          BODY=$(git log --pretty=format:"- %s" "$RANGE" \
+            | grep -v "^- Merge pull request" \
+            | grep -v '^- chore: bump version' || true)
+          {
+            echo "### Changes"
+            if [ -n "$BODY" ]; then
+              echo "$BODY"
+            else
+              echo "- Version bump"
+            fi
+          } > release_notes.md
+          cat release_notes.md
+
+      - name: Create release
+        if: steps.version.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release_notes.md
