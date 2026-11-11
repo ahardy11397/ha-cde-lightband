@@ -6,8 +6,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.components.sensor import SensorDeviceClass
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.cde_lightband.const import DOMAIN, CONF_USERNAME, CONF_PASSWORD
-from custom_components.cde_lightband.cde_api import CdeBillingData, CdeUsageRecord
+from custom_components.cde_lightband.const import (
+    DOMAIN,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_INTERNET_PLAN,
+)
+from custom_components.cde_lightband.cde_api import (
+    CdeBillingData,
+    CdeRateData,
+    CdeUsageRecord,
+)
+from custom_components.cde_lightband.coordinator import CdeDataUpdateCoordinator
 
 @pytest.mark.asyncio
 async def test_sensors_created_and_updated(hass: HomeAssistant):
@@ -99,8 +109,6 @@ async def test_sensors_created_and_updated(hass: HomeAssistant):
         assert balance_state.attributes["attribution"] == "Data provided by CDE Lightband"
 
 
-from custom_components.cde_lightband.const import CONF_INTERNET_PLAN
-from custom_components.cde_lightband.cde_api import CdeRateData
 from custom_components.cde_lightband.coordinator import CdeDataUpdateCoordinator
 
 mock_rates = CdeRateData(
@@ -112,9 +120,14 @@ mock_rates = CdeRateData(
     fetched_at="2026-11-10T12:00:00+00:00",
 )
 
+_INTERNET_PRICES = {"300": 53.95, "600": 73.95, "1000": 94.95, "2500": 123.95}
+_UNSET = object()
 
-async def _setup_estimated_bill(hass, entry_options=None, rates=mock_rates, usage=None, kwh=42.8, internet_prices={"300": 53.95, "600": 73.95, "1000": 94.95, "2500": 123.95}):
+
+async def _setup_estimated_bill(hass, entry_options=None, rates=mock_rates, usage=None, kwh=42.8, internet_prices=_UNSET):
     """Set up the integration with patched client methods; returns the entry."""
+    if internet_prices is _UNSET:
+        internet_prices = _INTERNET_PRICES
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_USERNAME: "testuser", CONF_PASSWORD: "testpassword"},
