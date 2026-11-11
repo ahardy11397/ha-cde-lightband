@@ -109,8 +109,6 @@ async def test_sensors_created_and_updated(hass: HomeAssistant):
         assert balance_state.attributes["attribution"] == "Data provided by CDE Lightband"
 
 
-from custom_components.cde_lightband.coordinator import CdeDataUpdateCoordinator
-
 mock_rates = CdeRateData(
     energy_rate=0.11010,
     customer_charge=30.50,

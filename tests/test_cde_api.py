@@ -227,6 +227,7 @@ async def test_fetch_rates_passes_explicit_timeout():
     await client2.fetch_internet_prices()
     assert session2.get_kwargs[0]["timeout"].total == 20
 
+
 @pytest.mark.asyncio
 async def test_fetch_usage_data_skips_unparseable_dates():
     """Rows with dates that can't be parsed are dropped, not stamped with now()."""
