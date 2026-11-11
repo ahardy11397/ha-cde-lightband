@@ -39,8 +39,8 @@ def _parse_date(date_str: str | None) -> str | None:
     return date_str.strip()
 
 
-def _parse_timestamp(date_str: str | None) -> str:
-    """Parse date string into UTC ISO timestamp."""
+def _parse_timestamp(date_str: str | None) -> str | None:
+    """Parse date string into UTC ISO timestamp, or None if unparseable."""
     if date_str:
         for fmt in ("%b %d, %Y", "%B %d, %Y", "%Y-%m-%d"):
             try:
@@ -48,7 +48,7 @@ def _parse_timestamp(date_str: str | None) -> str:
                 return dt.isoformat()
             except ValueError:
                 pass
-    return datetime.now(timezone.utc).isoformat()
+    return None
 
 
 @dataclass
@@ -557,6 +557,11 @@ class CdeApiClient:
                         except (ValueError, TypeError):
                             kwh = 0.0
                         ts = _parse_timestamp(raw_date)
+                        if ts is None:
+                            # A record without a parseable date would count into the
+                            # wrong month bucket; skip it rather than guess.
+                            _LOGGER.debug("Skipping usage row with unparseable date %r", raw_date)
+                            continue
                         iso_d = _parse_date(raw_date)
                         records.append(
                             CdeUsageRecord(
