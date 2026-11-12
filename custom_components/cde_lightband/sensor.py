@@ -28,6 +28,7 @@ from .const import (
     ATTR_METER_ID,
     ATTR_READING_DATE,
     ATTR_MONTH_TO_DATE_KWH,
+    ATTR_DAILY_KWH,
     ATTR_ENERGY_RATE,
     ATTR_CUSTOMER_CHARGE,
     ATTR_GRID_ACCESS_CHARGE,
@@ -55,6 +56,7 @@ async def async_setup_entry(
         CdeLastPaymentSensor(coordinator),
         CdeLastBillSensor(coordinator),
         CdeDailyEnergySensor(coordinator),
+        CdeDailyEnergyCostSensor(coordinator),
         CdeEstimatedBillSensor(coordinator),
     ]
 
@@ -229,6 +231,44 @@ class CdeDailyEnergySensor(CdeBaseSensor):
         return {
             ATTR_METER_ID: latest.meter_id,
             ATTR_READING_DATE: latest.reading_date or latest.timestamp,
+        }
+
+
+class CdeDailyEnergyCostSensor(CdeBaseSensor):
+    """Sensor for the daily energy cost (kWh * published energy rate, USD).
+
+    Tracks the same meter record as ``CdeDailyEnergySensor``, so the two
+    update together: daily kWh times the energy rate only — no fixed
+    charges, taxes, or internet.
+    """
+
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_native_unit_of_measurement = "USD"
+    _attr_icon = "mdi:cash"
+
+    def __init__(self, coordinator: CdeDataUpdateCoordinator) -> None:
+        super().__init__(coordinator, "daily_energy_cost", "Daily energy cost")
+
+    @property
+    def native_value(self) -> float | None:
+        rates = self.coordinator.rate_data
+        records = self.coordinator.usage_records
+        if rates is None or not records:
+            return None
+        return round(records[-1].kwh * rates.energy_rate, 2)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        rates = self.coordinator.rate_data
+        records = self.coordinator.usage_records
+        if rates is None or not records:
+            return {}
+        latest = records[-1]
+        return {
+            ATTR_DAILY_KWH: latest.kwh,
+            ATTR_ENERGY_RATE: rates.energy_rate,
+            ATTR_READING_DATE: latest.reading_date or latest.timestamp,
+            ATTR_RATE_MONTH: rates.rate_month,
         }
 
 

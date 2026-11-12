@@ -30,7 +30,13 @@ Automatically exposes account billing details as native Home Assistant entities:
 * Covers CDE's published charges only — it does not include taxes or TVA fuel-cost adjustments, so it will run slightly below the actual bill.
 * Attributes show exactly how the estimate was built: `month_to_date_kwh`, `energy_rate`, `customer_charge`, `grid_access_charge`, `internet_plan`, `internet_price`, `rate_month`, and `rates_fetched`.
 
-### 4. Native UI Configuration (Config Flow)
+### 4. Daily Energy Cost Sensor
+* `sensor.cde_daily_energy_cost`: What your most recent full meter day cost in energy (`USD`) — the daily consumption sensor's kWh × the published energy rate.
+* Updates together with `sensor.cde_daily_energy_consumption`: when one moves, the other does.
+* Covers the energy charge only — no fixed charges, taxes, or internet — so it shows what the raw kWh cost, not a complete daily bill.
+* Attributes: `daily_kwh`, `energy_rate`, `reading_date`, and `rate_month`.
+
+### 5. Native UI Configuration (Config Flow)
 * Easily configured via **Settings > Devices & Services > Add Integration**.
 * Securely manages authentication against the CDE Lightband customer portal (`myaccount.clarksvillede.com`).
 * Automatically detects your account number and binds to a single device in the Home Assistant Device Registry.
