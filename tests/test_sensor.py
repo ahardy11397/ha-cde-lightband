@@ -122,7 +122,7 @@ _INTERNET_PRICES = {"300": 53.95, "600": 73.95, "1000": 94.95, "2500": 123.95}
 _UNSET = object()
 
 
-async def _setup_estimated_bill(hass, entry_options=None, rates=mock_rates, usage=None, kwh=42.8, internet_prices=_UNSET):
+async def _setup_integration(hass, entry_options=None, rates=mock_rates, usage=None, kwh=42.8, internet_prices=_UNSET):
     """Set up the integration with patched client methods; returns the entry."""
     if internet_prices is _UNSET:
         internet_prices = _INTERNET_PRICES
@@ -169,7 +169,7 @@ async def _setup_estimated_bill(hass, entry_options=None, rates=mock_rates, usag
 @pytest.mark.asyncio
 async def test_estimated_bill_sensor_computes_estimate(hass: HomeAssistant):
     """Estimate = kWh*rate + customer + grid access + internet price."""
-    await _setup_estimated_bill(hass, {CONF_INTERNET_PLAN: "300"})
+    await _setup_integration(hass, {CONF_INTERNET_PLAN: "300"})
     state = hass.states.get("sensor.cde_lightband_12345678_estimated_bill")
     assert state is not None
     assert float(state.state) == 91.16  # 42.8*0.11010=4.71 + 30.50 + 2.00 + 53.95
@@ -187,7 +187,7 @@ async def test_estimated_bill_sensor_computes_estimate(hass: HomeAssistant):
 @pytest.mark.asyncio
 async def test_estimated_bill_sensor_without_internet(hass: HomeAssistant):
     """No internet plan selected: published charges only."""
-    await _setup_estimated_bill(hass, {})
+    await _setup_integration(hass, {})
     state = hass.states.get("sensor.cde_lightband_12345678_estimated_bill")
     assert state is not None
     assert float(state.state) == 37.21  # 4.71 + 30.50 + 2.00
@@ -198,7 +198,7 @@ async def test_estimated_bill_sensor_without_internet(hass: HomeAssistant):
 @pytest.mark.asyncio
 async def test_estimated_bill_unknown_before_rates_fetched(hass: HomeAssistant):
     """No rates ever obtained -> unknown state."""
-    await _setup_estimated_bill(hass, {}, rates=None)
+    await _setup_integration(hass, {}, rates=None)
     state = hass.states.get("sensor.cde_lightband_12345678_estimated_bill")
     assert state is not None
     assert state.state == "unknown"
@@ -207,7 +207,7 @@ async def test_estimated_bill_unknown_before_rates_fetched(hass: HomeAssistant):
 @pytest.mark.asyncio
 async def test_estimated_bill_unknown_at_month_start(hass: HomeAssistant):
     """No usage in the current calendar month -> unknown, not a fixed-charge number."""
-    await _setup_estimated_bill(hass, {CONF_INTERNET_PLAN: "300"}, kwh=0)
+    await _setup_integration(hass, {CONF_INTERNET_PLAN: "300"}, kwh=0)
     state = hass.states.get("sensor.cde_lightband_12345678_estimated_bill")
     assert state is not None
     assert state.state == "unknown"
@@ -222,7 +222,49 @@ async def test_estimated_bill_unknown_when_internet_price_missing(hass: HomeAssi
         grid_access_tiers=[(1000.0, 2.00), (2000.0, 4.00), (None, 7.00)],
         rate_month="November 2026",
     )
-    await _setup_estimated_bill(hass, {CONF_INTERNET_PLAN: "300"}, rates=rates_no_internet, internet_prices=None)
+    await _setup_integration(hass, {CONF_INTERNET_PLAN: "300"}, rates=rates_no_internet, internet_prices=None)
     state = hass.states.get("sensor.cde_lightband_12345678_estimated_bill")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+def _usage_record(kwh=24.5, reading_date="2026-11-09"):
+    return CdeUsageRecord(
+        timestamp=f"{reading_date}T00:00:00+00:00",
+        kwh=kwh,
+        meter_id="MTR1234",
+        reading_date=reading_date,
+    )
+
+
+@pytest.mark.asyncio
+async def test_daily_energy_cost_sensor_computes_cost(hass: HomeAssistant):
+    """Daily cost = most recent daily kWh * published energy rate."""
+    await _setup_integration(hass, usage=[_usage_record(kwh=24.5)])
+    state = hass.states.get("sensor.cde_lightband_12345678_daily_energy_cost")
+    assert state is not None
+    assert float(state.state) == 2.70  # 24.5 kWh * $0.11010/kWh
+    assert state.attributes["device_class"] == SensorDeviceClass.MONETARY
+    assert state.attributes["unit_of_measurement"] == "USD"
+    assert state.attributes["daily_kwh"] == 24.5
+    assert state.attributes["energy_rate"] == 0.11010
+    assert state.attributes["reading_date"] == "2026-11-09"
+    assert state.attributes["rate_month"] == "November 2026"
+
+
+@pytest.mark.asyncio
+async def test_daily_energy_cost_unknown_without_rates(hass: HomeAssistant):
+    """No rates fetched yet -> unknown, even with usage on hand."""
+    await _setup_integration(hass, rates=None, usage=[_usage_record()])
+    state = hass.states.get("sensor.cde_lightband_12345678_daily_energy_cost")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.asyncio
+async def test_daily_energy_cost_unknown_without_usage(hass: HomeAssistant):
+    """No daily meter record yet -> unknown, even with rates on hand."""
+    await _setup_integration(hass, usage=[])
+    state = hass.states.get("sensor.cde_lightband_12345678_daily_energy_cost")
     assert state is not None
     assert state.state == "unknown"
