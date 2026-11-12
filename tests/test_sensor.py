@@ -268,3 +268,20 @@ async def test_daily_energy_cost_unknown_without_usage(hass: HomeAssistant):
     state = hass.states.get("sensor.cde_lightband_12345678_daily_energy_cost")
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.asyncio
+async def test_daily_energy_cost_uses_most_recent_record(hass: HomeAssistant):
+    """With several daily records, the newest day's kWh is the one priced."""
+    await _setup_integration(
+        hass,
+        usage=[
+            _usage_record(kwh=10.0, reading_date="2026-11-08"),
+            _usage_record(kwh=24.5, reading_date="2026-11-09"),
+        ],
+    )
+    state = hass.states.get("sensor.cde_lightband_12345678_daily_energy_cost")
+    assert state is not None
+    assert float(state.state) == 2.70  # 24.5 * 0.11010, not the 10.0 kWh day
+    assert state.attributes["daily_kwh"] == 24.5
+    assert state.attributes["reading_date"] == "2026-11-09"
