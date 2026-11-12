@@ -7,7 +7,38 @@ on:
     branches: [ master, main ]
 
 jobs:
+  gate:
+    # A validation run can sit queued for a long time; if its PR merges (and
+    # the branch is deleted) before the run starts, hacs/action 404s on the
+    # missing branch and fails spuriously. Check the PR's *live* state here —
+    # the event payload's `state` is snapshotted at trigger time and stays
+    # "open" for a queued run.
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Check the PR is still open
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          skip=false
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # gh reports state uppercased (OPEN/CLOSED/MERGED). On a transient
+            # API error, fail open and run validation rather than skip it.
+            state=$(gh pr view "${{ github.event.pull_request.number }}" \
+              --repo "${{ github.repository }}" --json state --jq .state 2>/dev/null \
+              || echo open)
+            if [ "${state,,}" != "open" ]; then
+              echo "PR no longer open; skipping stale validation run."
+              skip=true
+            fi
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
   validate:
+    needs: gate
+    if: needs.gate.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
