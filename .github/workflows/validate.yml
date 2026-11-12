@@ -24,10 +24,12 @@ jobs:
         run: |
           skip=false
           if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # gh reports state uppercased (OPEN/CLOSED/MERGED). On a transient
+            # API error, fail open and run validation rather than skip it.
             state=$(gh pr view "${{ github.event.pull_request.number }}" \
               --repo "${{ github.repository }}" --json state --jq .state 2>/dev/null \
-              || echo closed)
-            if [ "$state" != "open" ]; then
+              || echo open)
+            if [ "${state,,}" != "open" ]; then
               echo "PR no longer open; skipping stale validation run."
               skip=true
             fi
