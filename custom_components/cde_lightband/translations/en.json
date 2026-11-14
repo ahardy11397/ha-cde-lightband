@@ -33,7 +33,8 @@
         "title": "CDE Lightband Options",
         "data": {
           "scan_interval": "Update Interval (minutes)",
-          "history_days": "Historical usage days to sync"
+          "history_days": "Historical usage days to sync",
+          "internet_plan": "Internet Plan"
         }
       }
     }

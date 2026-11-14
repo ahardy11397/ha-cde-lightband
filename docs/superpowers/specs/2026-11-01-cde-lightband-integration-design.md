@@ -42,10 +42,12 @@ While many electric cooperatives utilize NISC SmartHub, investigation of `myacco
   * Response: Returns `SignedInToken` on success, or `SignInException/3923402574` on invalid credentials.
 * `getJsonData(data: JsonData)`:
   * Executes service bus operations.
-  * `Landing` with action `LoadBilling`: Returns account balances, due dates, past due amounts, and last payment dates.
-  * `Charts` with action `usage` or `table`: Returns smart meter interval readings (kWh) and timestamps.
-  * `AccountBillingHistory` with action `table`: Returns past bill history.
-* `signOut()`: Terminates the remote session cleanly.
+  * `AccountsTable` with action `reload`: Discovers account number, sub-account, service type (`MSSERV`), meter ID (`LOMETE`), service address (`LOCADDR`), and `totalDue` summary.
+  * `AccountBillingHistory` with action `table`: Returns past statement dates and amounts due (`DATE`, `DUE`).
+  * `AccountPayments` with action `table`: Returns payment history (`DATE`, `AMOUNT`).
+  * `Charts` with action `usage`: Lists available monthly drilldown partitions (`lParm`).
+  * `Charts` with action `table` (`TimeView: "DAILY"`): Returns daily smart meter electric usage records (kWh and date) for a given month partition.
+* `signOut()`: Optional session teardown endpoint (the client relies on session expiry handling and closes its `aiohttp` session on unload).
 
 ---
 
@@ -79,18 +81,22 @@ custom_components/cde_lightband/
 * **Identifiers**: `{(DOMAIN, account_number)}`
 * **Entry Type**: `service`
 
-### 4.2 Billing Sensors
+### 4.2 Billing & Rate Sensors
+All entities use `_attr_has_entity_name = True`, generating entity IDs in the form `sensor.cde_lightband_<account_number>_<key>`.
+
 | Entity ID | Device Class | Unit | State Value | Attributes |
 |---|---|---|---|---|
-| `sensor.cde_balance_due` | `monetary` | `USD` | Current balance owed | `account_number`, `service_address`, `is_past_due`, `past_due_amount` |
-| `sensor.cde_payment_due_date` | `date` | None | Due date (YYYY-MM-DD) | `days_until_due` |
-| `sensor.cde_last_payment_amount` | `monetary` | `USD` | Last payment amount | `last_payment_date` |
-| `sensor.cde_last_bill_amount` | `monetary` | `USD` | Total of most recent bill | `bill_date` |
+| `sensor.cde_lightband_<account>_balance_due` | `monetary` | `USD` | Current balance owed | `account_number`, `service_address`, `is_past_due`, `past_due_amount` |
+| `sensor.cde_lightband_<account>_payment_due_date` | `date` | None | Due date (`YYYY-MM-DD`) | `days_until_due` |
+| `sensor.cde_lightband_<account>_last_payment_amount` | `monetary` | `USD` | Last payment amount | `last_payment_date` |
+| `sensor.cde_lightband_<account>_last_bill_amount` | `monetary` | `USD` | Total of most recent bill | `last_bill_date` |
+| `sensor.cde_lightband_<account>_daily_energy_cost` | `monetary` | `USD` | Most recent meter day energy cost (`daily_kwh * energy_rate`) | `daily_kwh`, `energy_rate`, `reading_date`, `rate_month` |
+| `sensor.cde_lightband_<account>_estimated_bill` | `monetary` | `USD` | Running calendar-month estimate (published charges + optional internet) | `month_to_date_kwh`, `energy_rate`, `customer_charge`, `grid_access_charge`, `rate_month`, `rates_fetched`, `internet_plan`, `internet_price` |
 
 ### 4.3 Energy Dashboard & Consumption Sensors
-| Entity ID | Device Class | State Class | Unit | Purpose |
+| Entity ID | Device Class | State Class | Unit | Attributes / Purpose |
 |---|---|---|---|---|
-| `sensor.cde_daily_energy_consumption` | `energy` | `total_increasing` | `kWh` | Daily energy tracking sensor |
+| `sensor.cde_lightband_<account>_daily_energy_consumption` | `energy` | — | `kWh` | Latest completed daily reading; attributes: `meter_id`, `reading_date` |
 
 #### Long-Term Statistics Ingestion
 * **Statistic ID**: `cde_lightband:electric_consumption_<account_number>`
@@ -108,17 +114,21 @@ custom_components/cde_lightband/
 
 ## 5. Configuration Flow & Options Flow
 
-### 5.1 Config Flow
+### 5.1 Config & Re-authentication Flow
 * Step `user`:
   * Inputs: `username` (string), `password` (string).
   * Validation: Connects to CDE Lightband and calls `signIn`.
   * Errors: `invalid_auth`, `cannot_connect`, `unknown`.
   * Unique ID: Set to the CDE Account Number to prevent duplicate configurations.
+* Step `reauth_confirm`:
+  * Triggered automatically when `CdeAuthError` causes the coordinator to raise `ConfigEntryAuthFailed`.
+  * Prompts for the updated `password` and reloads the config entry upon success.
 
 ### 5.2 Options Flow
 * Configurable parameters:
-  * `update_interval`: Polling frequency in minutes (default: 60, min: 15, max: 1440).
-  * `history_days`: Days of usage history to backfill on setup (default: 30, max: 90).
+  * `scan_interval`: Polling frequency in minutes (default: 60, min: 15, max: 1440).
+  * `history_days`: Days of usage history to backfill on setup (default: 30, min: 1, max: 90).
+  * `internet_plan`: Optional CDE Lightband internet tier (`none`, `300`, `600`, `1000`, `2500`; default: `none`).
 
 ---
 

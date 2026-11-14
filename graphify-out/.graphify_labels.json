@@ -1,1 +1,18 @@
-{"0": "CdeApiClient", "1": "CdeDataUpdateCoordinator", "2": "cde_api.py", "3": "gwt_rpc.py", "4": "CdeUsageRecord", "5": "test_config_flow.py", "6": "steps", "7": "CdeConfigFlow", "8": "manifest.json", "9": "async_setup_entry", "10": "test_scaffolding.py", "11": "custom_components/__init__.py", "12": "ha-cde-lightband"}
+{
+  "0": "CdeApiClient & API Tests",
+  "1": "Coordinator & Sensor Entities",
+  "2": "Integration Lifecycle & Constants",
+  "3": "GWT-RPC Protocol & Date Parsing",
+  "4": "Billing, Usage & Coordinator Tests",
+  "5": "Exceptions & Config Flow Tests",
+  "6": "Validate Workflow (CI)",
+  "7": "Config & Options Flow",
+  "8": "Integration Manifest",
+  "9": "Sensor & Cost Tests",
+  "10": "Scaffolding Test",
+  "11": "Custom Components Package",
+  "12": "Repository Root",
+  "13": "Rate Scraping & Parsing",
+  "14": "Release Workflow (CD)",
+  "15": "Coordinator Initialization"
+}

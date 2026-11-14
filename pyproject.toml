@@ -1,6 +1,6 @@
 [project]
 name = "ha-cde-lightband"
-version = "1.0.0"
+version = "1.2.0"
 description = "Home Assistant custom integration for CDE Lightband"
 readme = "README.md"
 requires-python = ">=3.12"
