@@ -94,3 +94,15 @@ into a new `estimated_bill` sensor that updates on every coordinator refresh.
 - Whether the internet prices are scraped from the internet page on every
   update or only when the plan setting changes (owner doesn't care; scraping
   with the rates fetch each cycle is acceptable).
+
+## Post-Implementation Notes (v1.1.0 – v1.2.0)
+
+- **PR #2 (`fix-review-minors`)**: Hardened `parse_rates_html` to extract cell text
+  from `<div class="mtr-cell-content">` elements inside `<tr>` rows after the
+  `"Retail Rate"` header row (matching the live table's cell content instead of
+  repeated `data-mtr-content` column headers), added explicit `aiohttp.ClientTimeout`
+  calls, and skipped usage rows with unparseable dates.
+- **PR #4 (`daily-energy-cost`, v1.2.0)**: Added the companion
+  `sensor.cde_lightband_<account>_daily_energy_cost` sensor (`round(latest.kwh *
+  rates.energy_rate, 2)`) with attributes `daily_kwh`, `energy_rate`, `reading_date`,
+  and `rate_month`.

@@ -41,4 +41,6 @@ def test_translations_valid():
     assert "step" in strings["config"]
     assert "error" in strings["config"]
     assert "invalid_auth" in strings["config"]["error"]
+    assert "options" in strings
+    assert "internet_plan" in strings["options"]["step"]["init"]["data"]
     assert strings == en
